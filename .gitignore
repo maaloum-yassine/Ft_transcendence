@@ -1,0 +1,6 @@
+**/env/
+**/*.pyc
+**/__pycache__/
+
+# Ignorer les fichiers de log
+**/*.log
