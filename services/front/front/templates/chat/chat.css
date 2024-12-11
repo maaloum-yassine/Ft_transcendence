@@ -59,7 +59,7 @@ body {
   height: 100vh;
   overflow: hidden;
   font-family: 'Montserrat', sans-serif;
-  background: linear-gradient(135deg, rgba(255, 105, 0, 1), rgba(0, 0, 0, 1));
+  /* background: linear-gradient(135deg, rgba(255, 105, 0, 1), rgba(0, 0, 0, 1)); */
   background-size: 200% 200%;
   animation: chat_gradientPulse 4s ease infinite;
   position: relative;
@@ -73,7 +73,7 @@ body {
   z-index: -1;
 }
 
-.container {
+.container-chat {
   width: 100%;
   max-width: 1200px;
   height: 80vh;
@@ -319,7 +319,7 @@ h2 {
 }
 
 @media (max-width: 768px) {
-  .container {
+  .container-chat {
     flex-direction: column;
     height: 100%;
   }
