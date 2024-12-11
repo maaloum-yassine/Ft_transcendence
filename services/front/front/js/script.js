@@ -6,7 +6,7 @@ const FriendManager = (() => {
   let toggleBtn, userListContainer, searchInput;
 
   // Fetch all users excluding the authenticated user's friends
-
+  
   const fetchNonFriends = async () => {
     try {
       const response = await fetch(
@@ -28,7 +28,7 @@ const FriendManager = (() => {
         id: user.id,
         name: user.username,
         image: user.avatar
-          ? `/media/${user.avatar}`
+          ? `http://127.0.0.1:8000/media/${user.avatar}`
           : "https://via.placeholder.com/50",
         invitation_sent: user.invitation_sent,
       }));
@@ -101,17 +101,14 @@ const FriendManager = (() => {
   // Reject a friend request
   const removeFriend = async (username) => {
     try {
-      const response = await fetch(
-        `https://${window.location.host}/api/remove_friend/`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ username_friend: username }),
-        }
-      );
+      const response = await fetch(`https://${window.location.host}/api/remove_friend/`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ username_friend: username }),
+      });
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
