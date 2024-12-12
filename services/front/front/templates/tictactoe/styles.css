@@ -24,7 +24,7 @@
 }
 
 body {
-    font-family: 'VT323', monospace;
+    /* font-family: 'VT323', monospace; */
     background-color: var(--bg-black);
     color: var(--text-orange);
     min-height: 100vh;
