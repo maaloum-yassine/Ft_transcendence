@@ -75,11 +75,10 @@ class CustomUserProfileSerializer(serializers.ModelSerializer):
                 avatar_url = '/media/avatars/default_avatar.png'
             elif not avatar_url.startswith('/media/'):
                 avatar_url = f'/media/{avatar_url}'  
-            representation['avatar'] = self.context['request'].build_absolute_uri(avatar_url)
+                representation['avatar'] = self.context['request'].build_absolute_uri(avatar_url).replace('http://', 'https://')
         else:
             default_avatar_url = '/media/avatars/default_avatar.png'
-            representation['avatar'] = self.context['request'].build_absolute_uri(default_avatar_url)
-        
+            representation['avatar'] = self.context['request'].build_absolute_uri(default_avatar_url).replace('http://', 'https://')
         return representation
     
 

@@ -395,9 +395,9 @@ def list_friends(request:Request):
     for friendship in friendships:
         if friendship.user == request.user:
             if utils.return_image(friendship.friend.avatar) is True:
-                avatar = request.build_absolute_uri(settings.MEDIA_URL + friendship.friend.avatar)
+                avatar = request.build_absolute_uri(settings.MEDIA_URL + friendship.friend.avatar).replace('http://', 'https://')
             else :
-                avatar = request.build_absolute_uri(settings.MEDIA_URL + 'avatars/default_avatar.png')
+                avatar = request.build_absolute_uri(settings.MEDIA_URL + 'avatars/default_avatar.png').replace('http://', 'https://')
             friends_list.append({
                 "id_friend": friendship.friend.id,
                 "username": friendship.friend.username,
@@ -405,9 +405,9 @@ def list_friends(request:Request):
             })
         else:
             if utils.return_image(friendship.user.avatar) is True:
-                avatar = request.build_absolute_uri(settings.MEDIA_URL + friendship.user.avatar)
+                avatar = request.build_absolute_uri(settings.MEDIA_URL + friendship.user.avatar).replace('http://', 'https://')
             else :
-                avatar = request.build_absolute_uri(settings.MEDIA_URL + 'avatars/default_avatar.png')
+                avatar = request.build_absolute_uri(settings.MEDIA_URL + 'avatars/default_avatar.png').replace('http://', 'https://')
             friends_list.append({
                 "id_friend": friendship.user.id,
                 "username": friendship.user.username,

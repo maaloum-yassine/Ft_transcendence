@@ -29,7 +29,7 @@ const FriendManager = (() => {
         name: user.username,
         image: user.avatar
           ? `https://${window.location.host}/media/${user.avatar}`
-          : "https://via.placeholder.com/50",
+          : `https://${window.location.host}/media/avatars/default_avatar.png`,
         invitation_sent: user.invitation_sent,
       }));
       if (currentMode === "users") renderList(users);

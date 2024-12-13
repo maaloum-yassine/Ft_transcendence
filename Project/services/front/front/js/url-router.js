@@ -237,7 +237,6 @@ function handlePageScripts(location) {
     .pop()
     .toLowerCase();
 
-  alert(pageSelected);
   if (pageSelected === "signin.html") {
     fun_sign.initSignIn();
   } else if (pageSelected === "signup.html") {
@@ -267,7 +266,6 @@ function handlePageScripts(location) {
     initProfile();
     logout();
   } else if (pageSelected === "tictactoe.html") {
-    alert("I mhere");
     run();
     logout();
   } else if (pageSelected === "chat.html") {

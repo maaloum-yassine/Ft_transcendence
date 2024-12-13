@@ -81,7 +81,6 @@ def callback_42(request:Request):
     user.user_42 = True
     user.save()
     token = utils.generate_token(user, True)
-    print("Im here au response de JWT")
     response = redirect(f'https://{settings.IP_ADRESS}/home')
     response.set_cookie(key ='jwt', value=token, httponly=True, secure=True, samesite='Strict')
     response.data = {'jwt': token}
@@ -149,7 +148,6 @@ def google_callback(request:Request):
     user_info_url = "https://www.googleapis.com/oauth2/v2/userinfo"
     headers = {"Authorization": f"Bearer {access_token}"}
     response = requests.get(user_info_url, headers=headers)
-    print("IMMMMMMMmmmmmMMMMMMMM1333333333333337")
     if response.status_code != 200:
         response = redirect(f'https://{settings.IP_ADRESS}/404')
         return response
