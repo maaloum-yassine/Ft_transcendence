@@ -458,35 +458,96 @@ def list_requst_friend(request: Request):
     return Response({"requests": friend_requests}, status=status.HTTP_200_OK)
 
 
+# @api_view(['GET'])
+# def search_friend(request: Request):
+#     if request.user.is_anonymous:
+#         return redirect('home')
+#     user_name = request.GET.get('q')
+#     if not user_name:
+#         return Response({"detail": "Enter username"}, status=status.HTTP_404_NOT_FOUND)
+#     elif request.user.username == user_name:
+#         return redirect("profile")
+#     try:
+#         user_friend = models.CustomUser.objects.get(username=user_name)
+#     except models.CustomUser.DoesNotExist:
+#         return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+#     list_data_user = {}
+#     if utils.return_image(user_friend.avatar) is True:
+#         avatar = request.build_absolute_uri(settings.MEDIA_URL + user_friend.avatar)
+#     else :
+#         avatar = request.build_absolute_uri(settings.MEDIA_URL + 'avatars/default_avatar.png')
+#     list_data_user["username"] = user_friend.username
+#     list_data_user["avatar"] = avatar
+#     status_friendship = "not friend"
+#     existing_friendship = models.Friendship.objects.filter(Q(user=request.user, friend=user_friend) | Q(user=user_friend, friend=request.user)).first()
+#     if existing_friendship:
+#         if existing_friendship.accepted:
+#             status_friendship = "friend"
+#         else:
+#             status_friendship = "already invited"
+#     list_data_user["status_friendship"] = status_friendship
+#     return Response({"list_data_user": list_data_user}, status=status.HTTP_200_OK)
+
+
+
+
+
 @api_view(['GET'])
-def search_friend(request: Request):
+def search_friend(request):
+    # Check if the user is authenticated
     if request.user.is_anonymous:
         return redirect('home')
-    user_name = request.GET.get('q')
-    if not user_name:
-        return Response({"detail": "Enter username"}, status=status.HTTP_404_NOT_FOUND)
-    elif request.user.username == user_name:
-        return redirect("profile")
+    print("I Mhere 1333333333333777")
+    # Get the friend's ID from the query parameter
+    user_id = request.GET.get('id')
+    if not user_id:
+        return Response({"detail": "Enter a valid ID"}, status=status.HTTP_404_NOT_FOUND)
+
     try:
-        user_friend = models.CustomUser.objects.get(username=user_name)
+        # Search for the friend by ID
+        user_friend = models.CustomUser.objects.get(id=user_id)
     except models.CustomUser.DoesNotExist:
         return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    # Redirect if the user is searching for their own ID
+    if request.user.id == user_friend.id:
+        return redirect("profile")
+
+    # Build the friend's data response
     list_data_user = {}
-    if utils.return_image(user_friend.avatar) is True:
+    if utils.return_image(user_friend.avatar):
         avatar = request.build_absolute_uri(settings.MEDIA_URL + user_friend.avatar)
-    else :
+    else:
         avatar = request.build_absolute_uri(settings.MEDIA_URL + 'avatars/default_avatar.png')
+    
+    list_data_user["id"] = user_friend.id  # Return the friend's ID
     list_data_user["username"] = user_friend.username
     list_data_user["avatar"] = avatar
+
+    # Check the friendship status
     status_friendship = "not friend"
-    existing_friendship = models.Friendship.objects.filter(Q(user=request.user, friend=user_friend) | Q(user=user_friend, friend=request.user)).first()
+    existing_friendship = models.Friendship.objects.filter(
+        Q(user=request.user, friend=user_friend) | Q(user=user_friend, friend=request.user)
+    ).first()
+
     if existing_friendship:
         if existing_friendship.accepted:
             status_friendship = "friend"
         else:
             status_friendship = "already invited"
+
     list_data_user["status_friendship"] = status_friendship
+
     return Response({"list_data_user": list_data_user}, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
 
 
 #**************************************************ACTIVAE 2FA************************************************************#

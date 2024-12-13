@@ -71,12 +71,14 @@ const ChatManager = (() => {
 	  contactInfo.innerHTML = `
 		<h1 class="friend_name">${friend.name || 'Unnamed'}</h1>
 		<nav class="user-panel" aria-label="User actions">
+		<a href="/friend_profile/${friend.id}">
 		  <button class="panel-option" aria-label="View profile">
 			<span class="option-icon">
 			  <img src="https://cdn.builder.io/api/v1/image/assets/TEMP/5d00984856a6e4e4fc6cacf6193655e1fe96696ed9d79af881455ff7a035b029" alt="" />
 			</span>
 			<span class="option-text">View profile</span>
 		  </button>
+		  </a>
 		  <button class="panel-option" aria-label="Invite to a game">
 			<span class="option-icon">
 			  <img src="https://cdn.builder.io/api/v1/image/assets/TEMP/6a41e797efdf453abaa5586bc6a1db7a39ad686263f2df371265880e84f2029a" alt="" />
@@ -142,16 +144,15 @@ const ChatManager = (() => {
 	const initializeWebSockets = () => {
 	  const connectSocket = createWebSocket('/ws/second/');
 	  sender = getElement('.friend')?.getAttribute('data-authid') || null;
-  
 	  if (sender) {
 		notificationSocket = createWebSocket(`/ws/${sender}/`);
 	  }
-  
 	  setupSocketEventListeners(connectSocket);
 	};
   
 	const handleBeforeUnload = () => {
-	  if (chatSocket) {
+	  if (chatSocket) 
+	  {
 		chatSocket.close();
 	  }
 	};
@@ -186,10 +187,14 @@ const ChatManager = (() => {
 	  if (!notificationSocket) return;
   
 	  notificationSocket.onmessage = (e) => {
+		
+		console.log("hnaaaaaaaaaa");
 		const data = JSON.parse(e.data);
+		
 		const paragraph = getElement(`span.notification${data.sender}`);
 		if (paragraph) {
-		  paragraph.style.display = 'block';
+		  	paragraph.style.display = 'block';
+		  
 		}
 	  };
 	};
