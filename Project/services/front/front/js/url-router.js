@@ -12,10 +12,14 @@ import run from "./tictactoe.js";
 import logout from "./logout.js";
 import initgame_tic from "./hndl_event_home.js";
 import ChatManager from "./chat.js";
+<<<<<<< HEAD
 import { initFriendsModeGame } from './friends_mode.js';
 import { CGR_ } from './create_friend_game.js';
 import { CTRN_ } from "./tournament.js";
 // import { connectWebSocket  } from "./tournament_join.js";
+=======
+import fetchAndRenderProfile from "./friend_profile.js";
+>>>>>>> ab1cc40a70a85785c126e410327b9746e8d3b64a
 
 document.addEventListener("click", (e) => {
   const { target } = e;
@@ -107,6 +111,7 @@ const urlRoutes = {
     title: "chat",
     description: "chat",
   },
+<<<<<<< HEAD
   "/friends_mode": {
     template: "/templates/friends_mode/friends_mode.html",
     title: "Friends Mode Pong",
@@ -126,6 +131,12 @@ const urlRoutes = {
     template: "/templates/tournament/tournament_join.html",
     title: "Join Tournament Pong",
     description: "Join tournament to Play Pong with Friends",
+=======
+  "/friend_profile/:id": {
+    template: "/templates/friend_profile/friend_profile.html",
+    title: "Friend Profile",
+    description: "Friend's Profile",
+>>>>>>> ab1cc40a70a85785c126e410327b9746e8d3b64a
   },
 };
 
@@ -205,7 +216,11 @@ function isNotAuthenticatedRoute(location) {
 const urlLocationHandler = async (
   path = window.location.pathname.toLowerCase()
 ) => {
+  alert("CHEECKKK");
   let location = path;
+  console.log("urlLocationHandler called");
+  alert(path);
+  console.log(`Current Path: ${path}`);
   // Vérification si l'URL se termine par un slash
   // if (location.endsWith("/")) {
   //   alert("I mhere");
@@ -213,6 +228,19 @@ const urlLocationHandler = async (
   // }
 
   // Authentication check
+
+  let friendProfileId = null;
+
+  const friendProfileMatch = location.match(/^\/friend_profile\/(\d+)$/); // Match numeric ID
+  if (friendProfileMatch) {
+    friendProfileId = friendProfileMatch[1]; // Extract the ID
+    location = "/friend_profile/:id"; // Normalize to match your urlRoutes
+    console.log(`Friend Profile ID: ${friendProfileId}`); // Debug log
+  }
+
+  // if (urlRoutes[location] == "/friend_profile/") {
+  //   alert("I me here 42424244");
+  // }
   const isAuthenticated = await check_authenticate();
 
   let route = urlRoutes[location] || urlRoutes["/404"]; // Default to 404 if route doesn't exist
@@ -246,16 +274,14 @@ const urlLocationHandler = async (
     }
   }
 
-  // Load the HTML template for the route
   const html = await fetch(route.template).then((response) => response.text());
   document.getElementById("content").innerHTML = html; // Replace content
 
-  // Call functions based on the page
-  handlePageScripts(location);
+  handlePageScripts(location, friendProfileId);
 };
 
 // Handle the specific scripts for each page
-function handlePageScripts(location) {
+function handlePageScripts(location, friendProfileId = null) {
   const pageSelected = urlRoutes[location].template
     .split("/")
     .pop()
@@ -294,6 +320,14 @@ function handlePageScripts(location) {
     logout();
   } else if (pageSelected === "chat.html") {
     ChatManager.initialize();
+  } else if (pageSelected === "friend_profile.html") {
+    alert(" I m here au profile");
+    custom();
+    initProfile();
+    if (friendProfileId) {
+      fetchAndRenderProfile(friendProfileId);
+    }
+    // logout();
   }
   else if (pageSelected === "friends_mode.html") {
     const cleanup = initFriendsModeGame();

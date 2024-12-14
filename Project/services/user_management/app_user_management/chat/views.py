@@ -143,20 +143,41 @@ def is_friend_blocked_view(request, friend_id):
 
 
 
+def get_non_friends(authenticated_user):
+    # Get all accepted friendships involving the authenticated user
+    friends = Friendship.objects.filter(
+        Q(user=authenticated_user) | Q(friend=authenticated_user),
+        accepted=True
+    ).values_list('user', 'friend')  
+
+    # Extract the IDs of friends
+    friend_ids = set(
+        user_id for friend_pair in friends for user_id in friend_pair if user_id != authenticated_user.id
+    )
+
+    # Exclude the authenticated user and their friends from the list of all users
+    non_friends = CustomUser.objects.exclude(
+        Q(pk=authenticated_user.pk) | Q(pk__in=friend_ids)
+    )
+
+    return non_friends
+
+
 @api_view(['GET'])
 def list_non_friends(request):
     if not request.user.is_authenticated:
         return Response({"error": "Authentication required"}, status=404)
         
-    
     authenticated_user = request.user
     non_friends = get_non_friends(authenticated_user)
     
     # Serialize the data with details about invitations
     data = []
     for user in non_friends:
+        # Check if there is a pending invitation in either direction
         has_invitation = Friendship.objects.filter(
-            user=authenticated_user, friend=user, accepted=False
+            Q(user=authenticated_user, friend=user, accepted=False) |
+            Q(user=user, friend=authenticated_user, accepted=False)
         ).exists()
 
         # Directly use avatar if it's already a URL or path
@@ -166,7 +187,7 @@ def list_non_friends(request):
             "id": user.id,
             "username": user.username,
             "avatar": avatar,
-            "invitation_sent": has_invitation  # True if an invitation exists
+            "invitation_sent": has_invitation  # True if an invitation exists in either direction
         })
     
     return Response({"non_friends": data}, status=200)
