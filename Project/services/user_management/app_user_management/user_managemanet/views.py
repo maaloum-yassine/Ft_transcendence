@@ -516,9 +516,9 @@ def search_friend(request):
     # Build the friend's data response
     list_data_user = {}
     if utils.return_image(user_friend.avatar):
-        avatar = request.build_absolute_uri(settings.MEDIA_URL + user_friend.avatar)
+        avatar = request.build_absolute_uri(settings.MEDIA_URL + user_friend.avatar).replace('http://', 'https://')
     else:
-        avatar = request.build_absolute_uri(settings.MEDIA_URL + 'avatars/default_avatar.png')
+        avatar = request.build_absolute_uri(settings.MEDIA_URL + 'avatars/default_avatar.png').replace('http://', 'https://')
     
     list_data_user["id"] = user_friend.id  # Return the friend's ID
     list_data_user["username"] = user_friend.username

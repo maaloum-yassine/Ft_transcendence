@@ -12,7 +12,7 @@ import run from "./tictactoe.js";
 import logout from "./logout.js";
 import initgame_tic from "./hndl_event_home.js";
 import ChatManager from "./chat.js";
-import {fetchAndRenderProfile}  from './friend_profile.js';
+import fetchAndRenderProfile from "./friend_profile.js";
 
 document.addEventListener("click", (e) => {
   const { target } = e;
@@ -108,7 +108,7 @@ const urlRoutes = {
     template: "/templates/friend_profile/friend_profile.html",
     title: "Friend Profile",
     description: "Friend's Profile",
-},
+  },
 };
 
 const urlRoute = (event) => {
@@ -187,9 +187,11 @@ function isNotAuthenticatedRoute(location) {
 const urlLocationHandler = async (
   path = window.location.pathname.toLowerCase()
 ) => {
+  alert("CHEECKKK");
   let location = path;
   console.log("urlLocationHandler called");
-  console.log(`Current Path: ${path}`); 
+  alert(path);
+  console.log(`Current Path: ${path}`);
   // Vérification si l'URL se termine par un slash
   // if (location.endsWith("/")) {
   //   alert("I mhere");
@@ -198,20 +200,18 @@ const urlLocationHandler = async (
 
   // Authentication check
 
-
-
-
   let friendProfileId = null;
 
   const friendProfileMatch = location.match(/^\/friend_profile\/(\d+)$/); // Match numeric ID
   if (friendProfileMatch) {
-      friendProfileId = friendProfileMatch[1]; // Extract the ID
-      location = "/friend_profile/:id"; // Normalize to match your urlRoutes
-      console.log(`Friend Profile ID: ${friendProfileId}`); // Debug log
+    friendProfileId = friendProfileMatch[1]; // Extract the ID
+    location = "/friend_profile/:id"; // Normalize to match your urlRoutes
+    console.log(`Friend Profile ID: ${friendProfileId}`); // Debug log
   }
-  
 
-
+  // if (urlRoutes[location] == "/friend_profile/") {
+  //   alert("I me here 42424244");
+  // }
   const isAuthenticated = await check_authenticate();
 
   let route = urlRoutes[location] || urlRoutes["/404"]; // Default to 404 if route doesn't exist
@@ -245,16 +245,14 @@ const urlLocationHandler = async (
     }
   }
 
-  // Load the HTML template for the route
   const html = await fetch(route.template).then((response) => response.text());
   document.getElementById("content").innerHTML = html; // Replace content
 
-  // Call functions based on the page
   handlePageScripts(location, friendProfileId);
 };
 
 // Handle the specific scripts for each page
-function handlePageScripts(location,friendProfileId = null) {
+function handlePageScripts(location, friendProfileId = null) {
   const pageSelected = urlRoutes[location].template
     .split("/")
     .pop()
@@ -293,13 +291,11 @@ function handlePageScripts(location,friendProfileId = null) {
     logout();
   } else if (pageSelected === "chat.html") {
     ChatManager.initialize();
-  }else if (pageSelected === "friend_profile.html") 
-  alert("13333337")
-  {
+  } else if (pageSelected === "friend_profile.html") {
+    alert(" I m here au profile");
     custom();
     initProfile();
-    if (friendProfileId)
-    {
+    if (friendProfileId) {
       fetchAndRenderProfile(friendProfileId);
     }
     // logout();
