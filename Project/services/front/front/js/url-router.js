@@ -12,14 +12,11 @@ import run from "./tictactoe.js";
 import logout from "./logout.js";
 import initgame_tic from "./hndl_event_home.js";
 import ChatManager from "./chat.js";
-<<<<<<< HEAD
 import { initFriendsModeGame } from './friends_mode.js';
 import { CGR_ } from './create_friend_game.js';
 import { CTRN_ } from "./tournament.js";
 // import { connectWebSocket  } from "./tournament_join.js";
-=======
 import fetchAndRenderProfile from "./friend_profile.js";
->>>>>>> ab1cc40a70a85785c126e410327b9746e8d3b64a
 
 document.addEventListener("click", (e) => {
   const { target } = e;
@@ -111,7 +108,7 @@ const urlRoutes = {
     title: "chat",
     description: "chat",
   },
-<<<<<<< HEAD
+
   "/friends_mode": {
     template: "/templates/friends_mode/friends_mode.html",
     title: "Friends Mode Pong",
@@ -127,16 +124,15 @@ const urlRoutes = {
     title: "Create Tournament Pong",
     description: "Create tournament to Play Pong with Friends",
   },
-  "/tournament_join": {
-    template: "/templates/tournament/tournament_join.html",
-    title: "Join Tournament Pong",
-    description: "Join tournament to Play Pong with Friends",
-=======
+  // "/tournament_join": {
+  //   template: "/templates/tournament/tournament_join.html",
+  //   title: "Join Tournament Pong",
+  //   description: "Join tournament to Play Pong with Friends",
+  // }
   "/friend_profile/:id": {
     template: "/templates/friend_profile/friend_profile.html",
     title: "Friend Profile",
     description: "Friend's Profile",
->>>>>>> ab1cc40a70a85785c126e410327b9746e8d3b64a
   },
 };
 
