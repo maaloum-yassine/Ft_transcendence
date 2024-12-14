@@ -64,13 +64,13 @@ import chat.routing
 import a_game.routing
 import TicTacToe.routing
 from a_game.middleware import JWTAuthMiddleware
+import tournament.routing
 
 # Assurez-vous que Django est configuré avant de démarrer
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "transcendence.settings")
 
 # Initialisation de l'application ASGI Django
 django_asgi_app = get_asgi_application()
-
 
 # Définition de l'application ASGI
 application = ProtocolTypeRouter(
@@ -79,7 +79,11 @@ application = ProtocolTypeRouter(
         "websocket": AllowedHostsOriginValidator(
             JWTAuthMiddleware(
                 URLRouter(
-                    chat.routing.websocket_urlpatterns + a_game.routing.websocket_urlpatterns + TicTacToe.routing.websocket_urlpatterns               )
+                    chat.routing.websocket_urlpatterns + a_game.routing.websocket_urlpatterns + tournament.routing.websocket_urlpatterns + [
+                        # Ajout de la route pour TicTacToe
+                        path("ws/tictactoe/<str:room_name>/", TicTacToeConsumer.as_asgi())
+                    ]
+                )
             )
         ),
     }

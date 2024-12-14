@@ -1,148 +1,188 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
-
-from django.shortcuts import get_object_or_404
-
+from channels.db import database_sync_to_async
 from .models import GameModel
-
+from datetime import datetime
 import json
 import asyncio
 import random
-from datetime import datetime
 
 class GameConsumer(AsyncWebsocketConsumer):
-    players = 0
-    start_game = False
-    game_task = None
-
-    ballX = 0
-    ballY = 0
-    ballSpeedX = 300
-    ballSpeedY = 300
-    player1Score = 0
-    player2Score = 0
-    player1Y = 250
-    player2Y = 250
-    player1Velocity = 0
-    player2Velocity = 0
-    canvas_width = 1000
-    canvas_height = 600
-    table_left = 0
-    table_right = 0
-    paddle_speed = 400
-    paddle_height = 100
-    player1 = None
-    player2 = None
+    
+    games = {}
 
     async def connect(self):
-        # if not self.scope['user'].is_authenticated:
-        #     return await self.close()
-            
         self.room_name = self.scope['url_route']['kwargs']['group_name']
-        self.room_group_name = f'game_{self.room_name}'
-        self.user = self.scope ['user']
-        # self.gameroom = get_object_or_404(GameModel, gameroom_name=self.room_name)3
+        self.room_group_name = f'{self.room_name}'
+        self.paddle = None
 
+        
+        if self.room_name not in GameConsumer.games:
+            GameConsumer.games[self.room_name] = {
+                'players': [],
+                'game_task': None,
+                'start_game': False,
+                'player1Y': 250,
+                'player2Y': 250,
+                'ballX': 0,
+                'ballY': 0,
+                'player1Score': 0,
+                'player2Score': 0,
+                'winner': None,
+                'Player1name': None,
+                'Player2name': None,
+                'canvas_width': 1000,
+                'canvas_height': 600,
+                'table_left': 0,
+                'table_right': 1000,
+                'table_top': 0,
+                'table_bottom': 600,
+                'paddle_height': 100,
+                'paddle_speed': 400,
+                'ballSpeedX': 300,
+                'ballSpeedY': 300
+            }
+
+        
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
+
+        game_state = GameConsumer.games[self.room_name]
+        game_state['players'].append(self.channel_name)
+
         
-        # Print the user that connects to the socket
-        # print(f"User connected: {self.scope['user']}")
-        GameConsumer.players += 1
-        if GameConsumer.players == 1:
+        if len(game_state['players']) == 1:
             self.paddle = 'paddle1'
-            GameConsumer.player1 = self.scope['user']
-        elif GameConsumer.players == 2:
+            game_state['Player1name'] = self.scope['user'].username
+
+        elif len(game_state['players']) == 2:
             self.paddle = 'paddle2'
-            GameConsumer.player2 = self.scope['user']
-            GameConsumer.start_game = True
-            # GameModel.game_started = True
-            # GameModel.created_at = datetime.now()
-            GameConsumer.reset_ball()
+            game_state['Player2name'] = self.scope['user'].username
+            game_state['start_game'] = True
+            
+            
+            self.reset_ball(game_state)
+
+            
             await self.start_game_loop()
 
+            
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
                     'type': 'game_start',
-                    'start_game': GameConsumer.start_game,
-                    'ballX': GameConsumer.ballX,
-                    'ballY': GameConsumer.ballY,
-                    'player1Y': GameConsumer.player1Y,
-                    'player2Y': GameConsumer.player2Y
+                    'start_game': game_state['start_game'],
+                    'ballX': game_state['ballX'],
+                    'ballY': game_state['ballY'],
+                    'player1Y': game_state['player1Y'],
+                    'player2Y': game_state['player2Y']
                 }
             )
+
         else:
+            
             await self.close()
             return
 
+        
         await self.send(text_data=json.dumps({'paddle': self.paddle}))
 
     async def disconnect(self, close_code):
+        game_state = GameConsumer.games[self.room_name]
+        
+        
+        if self.channel_name in game_state['players']:
+            game_state['players'].remove(self.channel_name)
 
-        #check winner
-        # if GameConsumer.player1Score > GameConsumer.player2Score:
-        #     GameModel.winner = GameConsumer.player1
-        # else:
-        #     GameModel.winner = GameConsumer.player2
-        # print(f"Winner is {GameModel.winner}")
-
-        GameConsumer.players -= 1
-
-        if GameConsumer.players < 2:
-            game_room = get_object_or_404(GameModel, room_name=self.room_name)
-            game_room.game_ended = True
-            game_room.save()
-
-            GameConsumer.start_game = False
+        
+        if len(game_state['players']) < 2:
+            game_state['start_game'] = False
             
-            if GameConsumer.game_task:
-                GameConsumer.game_task.cancel()
-                GameConsumer.game_task = None
+            
+            if game_state['game_task']:
+                game_state['game_task'].cancel()
+                game_state['game_task'] = None
+
+            
+            await self.game_ended_in_db()
+
         
-        # GameModel.game_spend_time = datetime.now() - GameModel.created_at
-        # GameModel.game_started = False
-        # GameModel.game_ended = True
-        # GameModel.save()
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
-        # await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+    @database_sync_to_async
+    def game_ended_in_db(self):
+        try:
+            game = GameModel.objects.get(gameroom_name=self.room_group_name)
+            game_state = GameConsumer.games[self.room_name]
+            
+            game.game_ended = True
+            game.player1Score = game_state['player1Score']
+            game.player2Score = game_state['player2Score']
+            
+            
+            time_hours = datetime.now().hour - game.created_at.hour
+            time_minute = datetime.now().minute - game.created_at.minute
+            time_second = datetime.now().second - game.created_at.second
+            game.game_spend_time = f"0{time_hours}:0{time_minute}:{time_second}"
+            
+            
+            if game.winner is None:
+                if game_state['player2Score'] > game_state['player1Score']:
+                    game.winner = game_state['Player2name']
+                elif game_state['player2Score'] < game_state['player1Score']:
+                    game.winner = game_state['Player1name']
+                else:
+                    
+                    game.winner = game_state['Player2name']
 
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'game_end',
-                'game_ended': True
-            }
-        )
+            game.save()
+            print(f"Game ended and saved in DB for room: {self.room_group_name}")
+
+        except GameModel.DoesNotExist:
+            print(f"Game not found for room: {self.room_group_name}")
+
+    def reset_ball(self, game_state):
         
-        await self.close()
-
-    @staticmethod
-    def reset_ball():
-        GameConsumer.ballX = GameConsumer.canvas_width / 2
-        GameConsumer.ballY = GameConsumer.canvas_height / 2
-        GameConsumer.ballSpeedX = 300 * random.choice([-1, 1])
-        GameConsumer.ballSpeedY = 300 * random.choice([-1, 1])
+        game_state['ballX'] = game_state['canvas_width'] / 2
+        game_state['ballY'] = game_state['canvas_height'] / 2
+        game_state['ballSpeedX'] = 300 * random.choice([-1, 1])
+        game_state['ballSpeedY'] = 300 * random.choice([-1, 1])
 
     async def start_game_loop(self):
-        if not GameConsumer.game_task:
-            GameConsumer.game_task = asyncio.create_task(self.game_loop())
+        game_state = GameConsumer.games[self.room_name]
+        
+        
+        if not game_state['game_task']:
+            game_state['game_task'] = asyncio.create_task(self.game_loop())
 
     async def game_loop(self):
+        game_state = GameConsumer.games[self.room_name]
+
         try:
-            while GameConsumer.start_game:
-                self.update_ball_position(0.016)
-                self.update_paddle_position(0.016)
+            while game_state['start_game']:
+                
+                self.update_ball_position(game_state, 0.016)
+                self.update_paddle_position(game_state, 0.016)
+
+                
+                if game_state['player1Score'] == 7:
+                    game_state['winner'] = game_state['Player1name']
+                    await self.end_game(game_state)
+
+                elif game_state['player2Score'] == 7:
+                    game_state['winner'] = game_state['Player2name']
+                    await self.end_game(game_state)
+
                 
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {
                         'type': 'game_state',
-                        'player1Y': GameConsumer.player1Y,
-                        'player2Y': GameConsumer.player2Y,
-                        'ballX': GameConsumer.ballX,
-                        'ballY': GameConsumer.ballY,
-                        'player1Score': GameConsumer.player1Score,
-                        'player2Score': GameConsumer.player2Score
+                        'player1Y': game_state['player1Y'],
+                        'player2Y': game_state['player2Y'],
+                        'ballX': game_state['ballX'],
+                        'ballY': game_state['ballY'],
+                        'player1Score': game_state['player1Score'],
+                        'player2Score': game_state['player2Score']
                     }
                 )
 
@@ -150,51 +190,80 @@ class GameConsumer(AsyncWebsocketConsumer):
         except asyncio.CancelledError:
             pass
 
-    def update_ball_position(self, delta_time):
-        GameConsumer.ballX += GameConsumer.ballSpeedX * delta_time
-        GameConsumer.ballY += GameConsumer.ballSpeedY * delta_time
-
-        if GameConsumer.ballY <= GameConsumer.table_top + 15 or GameConsumer.ballY >= GameConsumer.table_bottom - 15:
-            GameConsumer.ballSpeedY = -GameConsumer.ballSpeedY
+    def update_ball_position(self, game_state, delta_time):
         
+        game_state['ballX'] += game_state['ballSpeedX'] * delta_time
+        game_state['ballY'] += game_state['ballSpeedY'] * delta_time
 
-        if GameConsumer.ballX <= GameConsumer.table_left + 30 and GameConsumer.player1Y <= GameConsumer.ballY <= GameConsumer.player1Y + GameConsumer.paddle_height:
-            GameConsumer.ballSpeedX = -GameConsumer.ballSpeedX
-        elif GameConsumer.ballX >= GameConsumer.table_right - 30 and GameConsumer.player2Y <= GameConsumer.ballY <= GameConsumer.player2Y + GameConsumer.paddle_height:
-            GameConsumer.ballSpeedX = -GameConsumer.ballSpeedX
+        
+        if (game_state['ballY'] <= game_state['table_top'] + 15 or 
+            game_state['ballY'] >= game_state['table_bottom'] - 15):
+            game_state['ballSpeedY'] = -game_state['ballSpeedY']
 
-        if GameConsumer.ballX <= GameConsumer.table_left:
-            GameConsumer.player2Score += 1
-            GameConsumer.reset_ball()
-        elif GameConsumer.ballX >= GameConsumer.table_right:
-            GameConsumer.player1Score += 1
-            GameConsumer.reset_ball()
+        
+        if (game_state['ballX'] <= game_state['table_left'] + 30 and 
+            game_state['player1Y'] <= game_state['ballY'] <= game_state['player1Y'] + game_state['paddle_height']):
+            game_state['ballSpeedX'] = -game_state['ballSpeedX']
 
-    def update_paddle_position(self, delta_time):
-        GameConsumer.player1Y += GameConsumer.player1Velocity * delta_time
-        GameConsumer.player1Y = max(GameConsumer.table_top , min(GameConsumer.player1Y, GameConsumer.table_bottom - GameConsumer.paddle_height))
+        elif (game_state['ballX'] >= game_state['table_right'] - 30 and 
+              game_state['player2Y'] <= game_state['ballY'] <= game_state['player2Y'] + game_state['paddle_height']):
+            game_state['ballSpeedX'] = -game_state['ballSpeedX']
 
+        
+        if game_state['ballX'] <= game_state['table_left'] + 10:
+            game_state['player2Score'] += 1
+            self.reset_ball(game_state)
 
-        GameConsumer.player2Y += GameConsumer.player2Velocity * delta_time
-        GameConsumer.player2Y = max(GameConsumer.table_top , min(GameConsumer.player2Y, GameConsumer.table_bottom - GameConsumer.paddle_height))
+        if game_state['ballX'] >= game_state['table_right'] - 10:
+            game_state['player1Score'] += 1
+            self.reset_ball(game_state)
 
+    def update_paddle_position(self, game_state, delta_time):
+        
+        game_state['player1Y'] += game_state.get('player1Velocity', 0) * delta_time
+        game_state['player1Y'] = max(
+            game_state['table_top'], 
+            min(game_state['player1Y'], game_state['table_bottom'] - game_state['paddle_height'])
+        )
+
+        
+        game_state['player2Y'] += game_state.get('player2Velocity', 0) * delta_time
+        game_state['player2Y'] = max(
+            game_state['table_top'], 
+            min(game_state['player2Y'], game_state['table_bottom'] - game_state['paddle_height'])
+        )
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
+        game_state = GameConsumer.games[self.room_name]
+
         
         if text_data_json.get('type') == 'screen_dimensions':
-            GameConsumer.canvas_width = text_data_json.get('width', 1000)
-            GameConsumer.canvas_height = text_data_json.get('height', 600)
-            GameConsumer.table_left = GameConsumer.canvas_width / 10
-            GameConsumer.table_right = GameConsumer.canvas_width - GameConsumer.canvas_width / 10
-            GameConsumer.table_top = GameConsumer.canvas_height / 10
-            GameConsumer.table_bottom = GameConsumer.canvas_height - GameConsumer.canvas_height / 10
+            game_state['canvas_width'] = text_data_json.get('width', 1000)
+            game_state['canvas_height'] = text_data_json.get('height', 600)
+            game_state['table_left'] = game_state['canvas_width'] / 10
+            game_state['table_right'] = game_state['canvas_width'] - game_state['canvas_width'] / 10
+            game_state['table_top'] = game_state['canvas_height'] / 10
+            game_state['table_bottom'] = game_state['canvas_height'] - game_state['canvas_height'] / 10
 
-        if self.paddle == 'paddle1':
-            GameConsumer.player1Velocity = text_data_json.get('velocity', 0)
-        elif self.paddle == 'paddle2':
-            GameConsumer.player2Velocity = text_data_json.get('velocity', 0)
         
+        if self.paddle == 'paddle1':
+            game_state['player1Velocity'] = text_data_json.get('velocity', 0)
+        elif self.paddle == 'paddle2':
+            game_state['player2Velocity'] = text_data_json.get('velocity', 0)
+
+    async def end_game(self, game_state):
+        game_state['start_game'] = False
+
+        try:
+            await self.channel_layer.group_send(self.room_group_name, {
+                'type': 'game_end',
+                'winner': game_state['winner'],
+                'redirect_url': '/profile/'
+            })
+        except Exception as e:
+            print(f"Error sending game end notification: {e}")
+
     async def game_state(self, event):
         await self.send(text_data=json.dumps(event))
 
@@ -205,4 +274,11 @@ class GameConsumer(AsyncWebsocketConsumer):
             'ballY': event['ballY'],
             'player1Y': event['player1Y'],
             'player2Y': event['player2Y']
+        }))
+
+    async def game_end(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'game_end',
+            'winner': event['winner'],
+            'url': event.get('redirect_url', '/profile/')
         }))

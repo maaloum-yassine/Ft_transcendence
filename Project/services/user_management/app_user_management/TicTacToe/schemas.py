@@ -32,7 +32,7 @@ class GameResponseSchema(BaseModel):
     status: str  # or any appropriate type
 
     class Config:
-        orm_mode = True  # This allows Pydantic to work with ORM models directly
+        from_attributes = True  # This allows Pydantic to work with ORM models directly
 
 
 class TicTacToeJoinGame(BaseModel):

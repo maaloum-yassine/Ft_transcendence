@@ -168,7 +168,7 @@
 
         <div class="match-options">
             <div class="match-box create-match">
-                <form method="post">
+                <form method="post" id="create-form">
                     <h2>Create Match</h2>
                     {% csrf_token %}
                     <div class="form-group">
@@ -178,19 +178,19 @@
                 </form>
             </div>
 
-                <div class="match-box join-match">
-                    <form method="post">
-                        <h2>Join Match</h2>
-                        {% csrf_token %}
-                        <div class="form-group">
-                            {{ join_form.joinmodelform }}
-                            <button class="join-btn" type="submit">Join Match</button>
-                        </div>
-                    </form>
-                </div>
+            <div class="match-box join-match">
+                <form method="post" id="join-form">
+                    <h2>Join Match</h2>
+                    {% csrf_token %}
+                    <div class="form-group">
+                        {{ join_form.joinmodelform }}
+                        <button class="join-btn" type="submit">Join Match</button>
+                    </div>
+                </form>
             </div>
-
+        </div>
         <button class="close-btn">ESC Close</button>
-    </div>
+    </div> 
 </body>
+
 </html>

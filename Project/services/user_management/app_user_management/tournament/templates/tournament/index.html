@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Waiting Room</title>
+    <title>Tournament Waiting Room</title>
     <style>
         * {
             margin: 0;
@@ -60,6 +59,8 @@
             padding: 10px;
             border-radius: 5px;
             margin-bottom: 10px;
+            display: flex;
+            align-items: center;
         }
 
         .start-btn {
@@ -73,7 +74,12 @@
             transition: background-color 0.3s;
         }
 
-        .start-btn:hover {
+        .start-btn:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+        }
+
+        .start-btn:hover:not(:disabled) {
             background-color: #e8491e;
         }
 
@@ -88,57 +94,170 @@
         .close-btn:hover {
             color: #fff;
         }
+
         .username-badge {
-        padding: 8px 16px;         /* Padding for spacing around the text */
-        background-color: #e8491e; /* Blue background for contrast */
-        color: rgb(228, 225, 225);              /* White text color */
-        border-radius: 9999px;     /* Rounded corners */
-        font-size: 0.875rem;        /* Small text size */
-        font-weight: 300;           /* Lighter font weight */
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
-        display: inline-block;     /* Makes the element inline, so the shape stays tight around the text */
-    }
+            padding: 8px 16px;
+            background-color: #e8491e;
+            color: rgb(228, 225, 225);
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 300;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+        }
+
+        .player.ready .username-badge {
+            background-color: #4CAF50;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Waiting for Players to Join...</h1>
-        <p>Please wait while other players join the match.</p>
+        <h1>Tournament Waiting Room</h1>
+        <p id="tournament-status">Waiting for players to join...</p>
 
         <div class="players-list">
             <h2>Players Joined:</h2>
-            {% for member in tournament_members %}
-                <div class="player">
-                    <div class="username-badge">{{ member.username }}</div>
-                </div>
-            {% endfor %}
+            <ul id="player-list">
+            </ul>
         </div>
 
-        <button class="start-btn">Start Match</button>
-
-        <button class="close-btn">ESC Close</button>
+        <button id="start-btn" class="start-btn" disabled>Start Match</button>
+        
+        <br>
+        <button class="close-btn">Close</button>
     </div>
 
     <script>
-        const players = {{ tournament_members|length }};
-        const maxPlayers = 2;  
+        
+        const tournamentName = 'Ps5zdZxLoGziiCcwmjwxsX';
+        let ws = null;
+        let isPlayerReady = false;
+        let tournamentData = null;
 
-        document.querySelector('.start-btn').addEventListener('click', function() {
-            if (players >= maxPlayers) {
+        
+        async function fetchTournamentData() {
+            try {
+                const response = await fetch(`game/tournament/Ps5zdZxLoGziiCcwmjwxsX/`);
+                tournamentData = await response.json();
                 
-                alert('Starting the match!');                
-                window.location.href = '/game/tournament/home/';  
+                updatePlayerList(tournamentData.tournament_members);
+                
+                updateTournamentStatus(tournamentData);
+            } catch (error) {
+                console.error('Error fetching tournament data:', error);
+                document.getElementById('tournament-status').textContent = 'Error loading tournament data';
+            }
+        }
 
+        
+        function updatePlayerList(players) {
+            const playerList = document.getElementById('player-list');
+            playerList.innerHTML = ''; 
+            
+            if (players.length === 0) {
+                const li = document.createElement('li');
+                li.classList.add('player');
+                li.textContent = 'Waiting for players to join...';
+                playerList.appendChild(li);
             } else {
-                alert('Not enough players to start the match. Please wait.');
+                players.forEach(player => {
+                    const li = document.createElement('li');
+                    li.classList.add('player');
+                    const badge = document.createElement('div');
+                    badge.classList.add('username-badge');
+                    badge.textContent = player.username;
+                    li.appendChild(badge);
+                    playerList.appendChild(li);
+                });
+            }
+        }
+
+        
+        function updateTournamentStatus(tournamentData) {
+            const statusElement = document.getElementById('tournament-status');
+            const startBtn = document.getElementById('start-btn');
+
+            if (tournamentData.is_tournament_full) {
+                statusElement.textContent = 'Tournament is full. Ready to start!';
+                startBtn.disabled = false;
+            } else {
+                const remainingSpots = 4 - tournamentData.tournament_members.length;
+                statusElement.textContent = `Waiting for ${remainingSpots} more player${remainingSpots !== 1 ? 's' : ''} to join`;
+                startBtn.disabled = true;
+            }
+        }
+
+        
+        function connectWebSocket() {
+            ws = new WebSocket(`ws://${window.location.host}/ws/game/tournament/${tournamentName}/`);
+
+            ws.onopen = function(event) {
+                console.log('Connected to WebSocket');
+                ws.send(JSON.stringify({ action: 'join' }));
+                
+                
+                fetchTournamentData();
+            };
+
+            ws.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                
+                if (message.type === 'tournament_members_handler') {
+                    fetchTournamentData(); 
+                }
+                
+                if (message.type === 'player_ready_update') {
+                    updateReadyStatus(message.ready_players);
+                }
+                
+                if (message.type === 'redirect_to_game') {   
+                    window.location.href = `/game/${message.game_room}/`;
+                }
+            };
+
+            ws.onerror = function(error) {
+                console.error('WebSocket Error:', error);
+                document.getElementById('tournament-status').textContent = 'Connection error. Please refresh.';
+            };
+
+            ws.onclose = function() {
+                console.log('WebSocket connection closed');
+                setTimeout(connectWebSocket, 3000); 
+            }
+        }
+
+        
+        function updateReadyStatus(readyPlayers) {
+            const playerItems = document.querySelectorAll('.player');
+            playerItems.forEach(playerItem => {
+                const playerName = playerItem.querySelector('.username-badge').textContent;
+                if (readyPlayers.includes(playerName)) {
+                    playerItem.classList.add('ready');
+                }
+            });
+        }
+
+        
+        document.getElementById('start-btn').addEventListener('click', function() {
+            if (!isPlayerReady && !this.disabled) {
+                isPlayerReady = true;
+                this.disabled = true;
+                this.textContent = 'Waiting for others...';
+                
+                if (ws) {
+                    ws.send(JSON.stringify({ action: 'player_ready' }));
+                }
             }
         });
+
         
-        document.querySelector('.close-btn').addEventListener('click', function() { 
-
-            alert('Match closed.');
-
-            window.location.href = '/exit-url';  
+        document.querySelector('.close-btn').addEventListener('click', () => {
+            window.close(); 
         });
+
+        
+        connectWebSocket();
     </script>
 </body>
+</html>

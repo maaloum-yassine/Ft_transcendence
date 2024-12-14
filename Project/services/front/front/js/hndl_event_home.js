@@ -19,6 +19,25 @@ const initgame_tic = () => {
       urlLocationHandler();
     });
   }
+  const friends_mode = document.getElementById("friendsModeButton");
+
+  if (friends_mode) {
+    friends_mode.addEventListener("click", (e) => {
+      e.preventDefault();
+      history.pushState(null, "", "/create_friends_game");
+      urlLocationHandler();
+    });
+  }
+
+  const tournament = document.getElementById("hometotournamentButton");
+
+  if (tournament) {
+    tournament.addEventListener("click", (e) => {
+      e.preventDefault();
+      history.pushState(null, "", "/tournament");
+      urlLocationHandler();
+    });
+  }
 };
 
 export default initgame_tic;

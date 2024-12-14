@@ -1,18 +1,19 @@
 from django.contrib import admin
-from .models import TournamentModels 
+from .models import TournamentModels, TournamentMatch
 
 class ConcertAdmin(admin.ModelAdmin):
     list_display = ["tournament_name", "tournamentgame_name"]
-    readonly_fields = ["tournament_members"]
-    exclude = ["createmodelform", "joinmodelform"]  
+    readonly_fields = ['tournament_name', 'admin', 'tournament_members', 'game1_name', 'game2_name']
+
+class TournamentMatchAdmin(admin.ModelAdmin):
+    readonly_fields = ['tournament', 'player1', 'player2', 'game1_room', 'game2_room', 'round_number', 'is_completed', 'winner', 'created_at']
 
 admin.site.register(TournamentModels, ConcertAdmin)
+admin.site.register(TournamentMatch, TournamentMatchAdmin)
+
+
 
 # {
 #     "username": "nassrolah", 
-#     "email": "test.sash698@passinbox.com", 
-#     "first_name": "nassro",
-#     "last_name": "amg",
-#     "password": "ZXCzxc123@", 
-#     "confirm_password": "ZXCzxc123@"
+#     "password": "ZXCzxc123@"
 # }

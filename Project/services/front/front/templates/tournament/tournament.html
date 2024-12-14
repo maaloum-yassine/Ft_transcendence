@@ -1,0 +1,82 @@
+<div class="tournament-container">
+    <div class="tournament-interface">
+        <div class="tournament-header">
+            <div class="tournament-branding">
+                <div class="logo-mark">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M50 10 L85 40 Q90 50 85 60 L50 90 L15 60 Q10 50 15 40 Z" 
+                                fill="none" stroke="currentColor" stroke-width="6"/>
+                    </svg>
+                </div>
+                <h1>TOURNAMENT ARENA</h1>
+            </div>
+        </div>
+
+        <div class="tournament-content">
+            <div class="match-selection-area">
+                <div class="match-card create-match">
+                    <div class="card-background"></div>
+                    <div class="card-content">
+                        <div class="card-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <h2>Create Match</h2>
+                        <form id="createtournamentform" class="match-form" type="submit">
+                            <div class="input-container">
+                                <input 
+                                    id="createtournamentinputid"
+                                    type="text" 
+                                    placeholder="Room Name" 
+                                    required 
+                                    maxlength="20"
+                                >
+                                <span class="input-border"></span>
+                            </div>
+                            <button type="submit" class="action-button create-button">
+                                Create Room
+                                <span class="button-shine"></span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="match-card join-match">
+                    <div class="card-background"></div>
+                    <div class="card-content">
+                        <div class="card-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <h2>Join Match</h2>
+                        <form id="jointournamentform" class="match-form">
+                            <div class="input-container">
+                                <input 
+                                    id="jointournamentinputid"
+                                    type="text" 
+                                    placeholder="Room Code" 
+                                    required 
+                                    maxlength="20"
+                                >
+                                <span class="input-border"></span>
+                            </div>
+                            <button type="submit" class="action-button join-button">
+                                Join Room
+                                <span class="button-shine"></span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tournament-footer">
+            <button class="close-action">
+                <span class="close-icon">×</span>
+                Close Tournament
+            </button>
+        </div>
+    </div>
+</div>

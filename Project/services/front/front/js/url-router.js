@@ -12,6 +12,10 @@ import run from "./tictactoe.js";
 import logout from "./logout.js";
 import initgame_tic from "./hndl_event_home.js";
 import ChatManager from "./chat.js";
+import { initFriendsModeGame } from './friends_mode.js';
+import { CGR_ } from './create_friend_game.js';
+import { CTRN_ } from "./tournament.js";
+// import { connectWebSocket  } from "./tournament_join.js";
 
 document.addEventListener("click", (e) => {
   const { target } = e;
@@ -19,7 +23,7 @@ document.addEventListener("click", (e) => {
     return;
   }
   e.preventDefault();
-  urlRoute(e); // Pass the event to handle routing
+  urlRoute(e);
 });
 
 const urlRoutes = {
@@ -102,6 +106,26 @@ const urlRoutes = {
     template: "/templates/chat/chat.html",
     title: "chat",
     description: "chat",
+  },
+  "/friends_mode": {
+    template: "/templates/friends_mode/friends_mode.html",
+    title: "Friends Mode Pong",
+    description: "Play Pong with Friends",
+  },
+  "/create_friends_game": {
+    template: "/templates/friends_mode/create_friends_game.html",
+    title: "Create Friends Mode Pong",
+    description: "Create Game to Play Pong with Friends",
+  },
+  "/tournament": {
+    template: "/templates/tournament/tournament.html",
+    title: "Create Tournament Pong",
+    description: "Create tournament to Play Pong with Friends",
+  },
+  "/tournament_join": {
+    template: "/templates/tournament/tournament_join.html",
+    title: "Join Tournament Pong",
+    description: "Join tournament to Play Pong with Friends",
   },
 };
 
@@ -271,8 +295,20 @@ function handlePageScripts(location) {
   } else if (pageSelected === "chat.html") {
     ChatManager.initialize();
   }
+  else if (pageSelected === "friends_mode.html") {
+    const cleanup = initFriendsModeGame();
+    window.gameCleanup = cleanup;
+  }
+  else if (pageSelected === "create_friends_game.html") {
+    CGR_();
+  }
+  else if (pageSelected === "tournament.html") {
+    CTRN_();
+  }
+  // else if (pageSelected === "tournament_join.html") {
+  //   connectWebSocket();
+  // }
 }
-
 // On popstate (back and forward buttons)
 window.onpopstate = () => {
   urlLocationHandler(window.location.pathname); // Load the page corresponding to the URL

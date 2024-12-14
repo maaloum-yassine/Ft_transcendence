@@ -32,8 +32,8 @@ class JWTAuthMiddleware:
         jwt_prefix = "jwt="
         jwt_start = cookie.find(jwt_prefix)
 
+        token = ""
         if jwt_start != -1:
-            print("hellooooooooooooooooooooooooooooooooooo")
             token = cookie[jwt_start + len(jwt_prefix):].split(';')[0]
         else:   
             scope['user'] = AnonymousUser()
