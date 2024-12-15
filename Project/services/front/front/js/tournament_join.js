@@ -1,21 +1,24 @@
 
-const state = history.state;
-const tournamentName = state ? state.roomName : null;
 
 let ws = null;
 let isPlayerReady = false;
 let tournamentData = null;
 
 async function fetchTournamentData() {
+    const state = history.state;
+    const tournamentName = state ? state.roomName : null;
     try {
-        const response = await fetch(`game/tournament/${tournamentName}/`);
+        const response = await fetch(`https://${window.location.host}/api/tournament/${tournamentName}/`);
         tournamentData = await response.json();
         
         updatePlayerList(tournamentData.tournament_members);
         updateTournamentStatus(tournamentData);
+        
+        return tournamentData.tournament_members;
     } catch (error) {
         console.error('Error fetching tournament data:', error);
         document.getElementById('trn-status-display').textContent = 'Connection Lost. Retrying...';
+        return [];
     }
 }
 
@@ -39,6 +42,8 @@ function updatePlayerList(players) {
             playerRoster.appendChild(li);
         });
     }
+
+    return players;
 }
 
 function updateTournamentStatus(tournamentData) {
@@ -55,8 +60,12 @@ function updateTournamentStatus(tournamentData) {
     }
 }
 
+
 export function connectWebSocket() {
-    ws = new WebSocket(`ws://${window.location.host}/ws/game/tournament/${tournamentName}/`);
+    const state = history.state;
+    const tournamentName = state ? state.roomName : null;
+    alert("This is the tournament name: " + tournamentName);
+    ws = new WebSocket(`wss://${window.location.host}/ws/game/tournament/${tournamentName}/`);
 
     ws.onopen = function(event) {
         console.log('Connected to Tournament Arena');
@@ -89,22 +98,51 @@ export function connectWebSocket() {
         console.log('Tournament Arena Connection Closed');
         setTimeout(connectWebSocket, 3000); 
     }
+
+    return ws;
 }
 
-document.getElementById('trn-match-launch').addEventListener('click', function() {
-    if (!isPlayerReady && !this.disabled) {
-        isPlayerReady = true;
-        this.disabled = true;
-        this.querySelector('.trn-button-text').textContent = 'Preparing Battlefield...';
-        
-        if (ws) {
-            ws.send(JSON.stringify({ action: 'player_ready' }));
-        }
+export function getCurrentTournamentPlayers() {
+    return tournamentData ? tournamentData.tournament_members : [];
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const launchButton = document.getElementById('trn-match-launch');
+    const exitButton = document.getElementById('trn-exit-arena');
+    
+    if (launchButton) {
+        launchButton.addEventListener('click', function() {
+            if (!isPlayerReady && !this.disabled) {
+                isPlayerReady = true;
+                this.disabled = true;
+                this.querySelector('.trn-button-text').textContent = 'Preparing Battlefield...';
+                if (ws) {
+                    ws.send(JSON.stringify({ action: 'player_ready' }));
+                }
+            }
+        });
+    }
+
+    if (exitButton) {
+        exitButton.addEventListener('click', () => {
+            window.close(); 
+        });
     }
 });
 
-document.getElementById('trn-exit-arena').addEventListener('click', () => {
-    window.close(); 
+document.addEventListener('DOMContentLoaded', () => {
+    const exitButton = document.getElementById('trn-exit-arena');
+
+    if (exitButton) {
+        exitButton.addEventListener('click', () => {
+            // Check if the window can be closed
+            if (window.opener) {
+                window.close();
+            } else {
+                alert('This window cannot be closed by the script.');
+            }
+        });
+    }
 });
 
 function updateReadyStatus(readyPlayers) {
@@ -116,5 +154,3 @@ function updateReadyStatus(readyPlayers) {
         }
     });
 }
-
-// connectWebSocket();

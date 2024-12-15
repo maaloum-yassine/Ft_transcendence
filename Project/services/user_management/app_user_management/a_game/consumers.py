@@ -102,16 +102,14 @@ class GameConsumer(AsyncWebsocketConsumer):
                 game_state['game_task'].cancel()
                 game_state['game_task'] = None
 
-            
-            await self.game_ended_in_db()
-
+        await self.game_ended_in_db()    
         
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
     @database_sync_to_async
     def game_ended_in_db(self):
         try:
-            game = GameModel.objects.get(gameroom_name=self.room_group_name)
+            game = GameModel.objects.get(room_name=self.room_group_name)
             game_state = GameConsumer.games[self.room_name]
             
             game.game_ended = True
@@ -133,6 +131,8 @@ class GameConsumer(AsyncWebsocketConsumer):
                 else:
                     
                     game.winner = game_state['Player2name']
+            else:
+                game.winner = game_state['winner']
 
             game.save()
             print(f"Game ended and saved in DB for room: {self.room_group_name}")
@@ -164,11 +164,11 @@ class GameConsumer(AsyncWebsocketConsumer):
                 self.update_paddle_position(game_state, 0.016)
 
                 
-                if game_state['player1Score'] == 7:
+                if game_state['player1Score'] == 2:
                     game_state['winner'] = game_state['Player1name']
                     await self.end_game(game_state)
 
-                elif game_state['player2Score'] == 7:
+                elif game_state['player2Score'] == 2:
                     game_state['winner'] = game_state['Player2name']
                     await self.end_game(game_state)
 
@@ -182,11 +182,13 @@ class GameConsumer(AsyncWebsocketConsumer):
                         'ballX': game_state['ballX'],
                         'ballY': game_state['ballY'],
                         'player1Score': game_state['player1Score'],
-                        'player2Score': game_state['player2Score']
+                        'player2Score': game_state['player2Score'],
+                        'winner': game_state['winner']
                     }
                 )
 
                 await asyncio.sleep(0.016)
+            game_state.save()
         except asyncio.CancelledError:
             pass
 
@@ -253,6 +255,8 @@ class GameConsumer(AsyncWebsocketConsumer):
             game_state['player2Velocity'] = text_data_json.get('velocity', 0)
 
     async def end_game(self, game_state):
+        await self.game_ended_in_db()    
+
         game_state['start_game'] = False
 
         try:

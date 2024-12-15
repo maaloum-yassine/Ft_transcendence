@@ -44,6 +44,7 @@ function createTournamentRoom(createtournamentName) {
         alert(res.message);
         if (res.message === "Tournament created successfully!") {
             alert("You created successfully!");
+            alert("This is the room name: " + res.room_name);
             history.pushState({ roomName: res.room_name }, "", "/tournament_join");
         }
         urlLocationHandler();

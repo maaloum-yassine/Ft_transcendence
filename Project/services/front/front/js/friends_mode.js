@@ -3,13 +3,14 @@ export function initFriendsModeGame() {
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
 
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  // Further reduce canvas size
+  canvas.width = window.innerWidth * 0.7;
+  canvas.height = window.innerHeight * 0.6;
 
-  const netWidth = 4;
-  const paddleWidth = 10;
-  const paddleHeight = 100;
-  const ballSize = 10;
+  const netWidth = 2;
+  const paddleWidth = 6;
+  const paddleHeight = 60;
+  const ballSize = 6;
 
   let ballX = canvas.width / 2 - ballSize / 2;
   let ballY = canvas.height / 2 - ballSize / 2;
@@ -20,15 +21,15 @@ export function initFriendsModeGame() {
   let myPaddle = null;
   let gameStarted = false;
   let paddleVelocity = 0;
-
+  let winner = null;
 
   const keydownHandler = (e) => {
     if (myPaddle === 'paddle1') {
-      if (e.key === 'w') paddleVelocity = -400;
-      if (e.key === 's') paddleVelocity = 400;
+      if (e.key === 'w') paddleVelocity = -300;
+      if (e.key === 's') paddleVelocity = 300;
     } else if (myPaddle === 'paddle2') {
-      if (e.key === 'ArrowUp') paddleVelocity = -400;
-      if (e.key === 'ArrowDown') paddleVelocity = 400;
+      if (e.key === 'ArrowUp') paddleVelocity = -300;
+      if (e.key === 'ArrowDown') paddleVelocity = 300;
     }
     ws.send(JSON.stringify({ velocity: paddleVelocity }));
   };
@@ -59,50 +60,78 @@ export function initFriendsModeGame() {
   }
 
   function drawNet() {
-    for (let i = window.innerHeight / 10; i <= canvas.height - window.innerHeight / 10; i += 30) {
-      drawRect(canvas.width / 2 - netWidth / 2, i, netWidth, 15, '#fff');
-    }
+    ctx.beginPath();
+    ctx.setLineDash([10, 8]); 
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.lineWidth = netWidth;
+    ctx.moveTo(canvas.width / 2, 0);
+    ctx.lineTo(canvas.width / 2, canvas.height);
+    ctx.stroke();
+    ctx.setLineDash([]); 
   }
 
   function drawScore() {
-    ctx.font = '35px Arial';
-    ctx.fillStyle = '#fff';
-    ctx.fillText(player1Score, canvas.width / 2 - 475, 200);
-    ctx.fillText(player2Score, canvas.width / 2 + 450, 200);
+    ctx.font = '20px "Courier New", monospace';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.textAlign = 'center';
+    ctx.fillText(player1Score, canvas.width / 2 - 70, 30);
+    ctx.fillText(player2Score, canvas.width / 2 + 70, 30);
   }
 
   function drawGame() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#1a1a2e');
+    gradient.addColorStop(1, '#16213e');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
     drawNet();
     drawScore();
-    drawRect(window.innerWidth / 10 + 5, player1Y, paddleWidth, paddleHeight, '#ffffff');
-    drawRect(window.innerWidth - window.innerWidth / 10 - paddleWidth - 5, player2Y, paddleWidth, paddleHeight, '#ffffff');
+    
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = '#00ffff';
+    drawRect(canvas.width / 10 + 3, player1Y, paddleWidth, paddleHeight, '#00ffff');
+    drawRect(canvas.width - canvas.width / 10 - paddleWidth - 3, player2Y, paddleWidth, paddleHeight, '#ff00ff');
+    ctx.shadowBlur = 0;
+
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#00ff80';
     drawCircle(ballX, ballY, ballSize, '#00ff80');
+    ctx.shadowBlur = 0;
+  }
+
+  function check_winner() {
+    if (winner) {
+      ctx.font = '30px "Courier New", monospace';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${winner} wins!`, canvas.width / 2, canvas.height - 50);
+      return;
+    }
   }
 
   function gameLoop(timestamp) {
     drawGame();
+    check_winner();
     requestAnimationFrame(gameLoop);
   }
 
-  alert('hello');
   const state = history.state;
   const roomName = state ? state.roomName : null;
 
   if (!roomName) {
-    alert('mochkila');
+    alert('Room not found');
     return;
   }
-  const ws = new WebSocket(`ws://localhost:8000/ws/game/${roomName}/`);
+  const ws = new WebSocket(`wss://${window.location.host}/ws/game/${roomName}/`);
 
   ws.onopen = () => {
     console.log('Connected to the server');
-    // getRoomName();
     try {
       ws.send(JSON.stringify({
         type: 'screen_dimensions',
-        width: window.innerWidth,
-        height: window.innerHeight,
+        width: canvas.width,
+        height: canvas.height,
       }));
     } catch (error) {
       console.error('Failed to send data:', error);
@@ -132,6 +161,7 @@ export function initFriendsModeGame() {
       ballY = data.ballY;
       player1Score = data.player1Score;
       player2Score = data.player2Score;
+      winner = data.winner;
     }
   };
 
@@ -147,7 +177,6 @@ export function initFriendsModeGame() {
   requestAnimationFrame(gameLoop);
 
   return () => {
-
     document.removeEventListener('keydown', keydownHandler);
     document.removeEventListener('keyup', keyupHandler);
     

@@ -15,7 +15,7 @@ import ChatManager from "./chat.js";
 import { initFriendsModeGame } from './friends_mode.js';
 import { CGR_ } from './create_friend_game.js';
 import { CTRN_ } from "./tournament.js";
-// import { connectWebSocket  } from "./tournament_join.js";
+import { connectWebSocket  } from "./tournament_join.js";
 import fetchAndRenderProfile from "./friend_profile.js";
 
 document.addEventListener("click", (e) => {
@@ -124,11 +124,11 @@ const urlRoutes = {
     title: "Create Tournament Pong",
     description: "Create tournament to Play Pong with Friends",
   },
-  // "/tournament_join": {
-  //   template: "/templates/tournament/tournament_join.html",
-  //   title: "Join Tournament Pong",
-  //   description: "Join tournament to Play Pong with Friends",
-  // }
+  "/tournament_join": {
+    template: "/templates/tournament/tournament_join.html",
+    title: "Join Tournament Pong",
+    description: "Join tournament to Play Pong with Friends",
+  },
   "/friend_profile/:id": {
     template: "/templates/friend_profile/friend_profile.html",
     title: "Friend Profile",
@@ -335,9 +335,9 @@ function handlePageScripts(location, friendProfileId = null) {
   else if (pageSelected === "tournament.html") {
     CTRN_();
   }
-  // else if (pageSelected === "tournament_join.html") {
-  //   connectWebSocket();
-  // }
+  else if (pageSelected === "tournament_join.html") {
+    connectWebSocket();
+  }
 }
 // On popstate (back and forward buttons)
 window.onpopstate = () => {

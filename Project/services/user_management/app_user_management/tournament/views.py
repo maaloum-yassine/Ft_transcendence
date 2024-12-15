@@ -115,7 +115,7 @@ def create_or_join(request: Request):
                 new_tournament.save()
                 new_tournament.tournament_members.add(request.user)
 
-                return JsonResponse({"state": True, "message": "Tournament created successfully!"})
+                return JsonResponse({"state": True, "message": "Tournament created successfully!", "room_name": new_tournament.tournament_name})
 
         elif request.data.get("jointournamentName"):
             tournamentName = request.data.get("jointournamentName")
@@ -126,7 +126,7 @@ def create_or_join(request: Request):
 
                         TournamentModels.objects.get(tournamentgame_name=tournamentName).tournament_members.add(request.user)
 
-                        return JsonResponse({"state": True, "message": "You have joined the tournament successfully!"})
+                        return JsonResponse({"state": True, "message": "You have joined the tournament successfully!", "room_name": TournamentModels.objects.get(tournamentgame_name=tournamentName).tournament_name})
                     return JsonResponse({"state": False, "message": "This tournament is full."})
                 return JsonResponse({"state": False, "message": "This tournament name already exists."})
             return JsonResponse({"state": False, "message": "This tournament does not exist."})
