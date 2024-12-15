@@ -378,41 +378,54 @@ def accept_friend_request(request: Request):
 
 # Check None avatar for user_google
 @api_view(['GET'])
-def list_friends(request:Request):
+def list_friends(request: Request):
     if request.user.is_anonymous:
         return redirect('home')
-    friendships = models.Friendship.objects.filter(Q(user=request.user) | Q(friend=request.user), accepted=True, blocked=False)
-    print(f"============>>>>>>>>>>>>>.. {friendships}")
+    
+    # Find all non-blocked friendships
+    friendships = models.Friendship.objects.filter(
+        Q(user=request.user, friend__isnull=False) | 
+        Q(friend=request.user, user__isnull=False), 
+        accepted=True,
+        blocked=False
+    )
+    
     if not friendships:
         return Response({"detail": "No friend found."}, status=status.HTTP_200_OK)
-    friends_list = []
-    friends_list.append(
+    
+    friends_list = [
         {
             "auth_username": request.user.username,
-            "id_auth": request.id,
+            "id_auth": request.user.id,
         }
-    )
+    ]
+    
+    # Keep track of added friend IDs to prevent duplicates
+    added_friend_ids = set()
+    
     for friendship in friendships:
-        if friendship.user == request.user:
-            if utils.return_image(friendship.friend.avatar) is True:
-                avatar = request.build_absolute_uri(settings.MEDIA_URL + friendship.friend.avatar).replace('http://', 'https://')
-            else :
-                avatar = request.build_absolute_uri(settings.MEDIA_URL + 'avatars/default_avatar.png').replace('http://', 'https://')
-            friends_list.append({
-                "id_friend": friendship.friend.id,
-                "username": friendship.friend.username,
-                "avatar": avatar
-            })
+        # Determine the friend user
+        friend_user = friendship.friend if friendship.user == request.user else friendship.user
+        
+        # Skip if this friend has already been added
+        if friend_user.id in added_friend_ids:
+            continue
+        
+        # Mark this friend as added
+        added_friend_ids.add(friend_user.id)
+        
+        # Handle avatar
+        if utils.return_image(friend_user.avatar) is True:
+            avatar = request.build_absolute_uri(settings.MEDIA_URL + friend_user.avatar).replace('http://', 'https://')
         else:
-            if utils.return_image(friendship.user.avatar) is True:
-                avatar = request.build_absolute_uri(settings.MEDIA_URL + friendship.user.avatar).replace('http://', 'https://')
-            else :
-                avatar = request.build_absolute_uri(settings.MEDIA_URL + 'avatars/default_avatar.png').replace('http://', 'https://')
-            friends_list.append({
-                "id_friend": friendship.user.id,
-                "username": friendship.user.username,
-                "avatar": avatar
-            })
+            avatar = request.build_absolute_uri(settings.MEDIA_URL + 'avatars/default_avatar.png').replace('http://', 'https://')
+        
+        friends_list.append({
+            "id_friend": friend_user.id,
+            "username": friend_user.username,
+            "avatar": avatar
+        })
+    
     return Response(friends_list, status=status.HTTP_200_OK)
 
 
@@ -539,6 +552,8 @@ def search_friend(request):
     list_data_user["status_friendship"] = status_friendship
 
     return Response({"list_data_user": list_data_user}, status=status.HTTP_200_OK)
+
+
 
 
 

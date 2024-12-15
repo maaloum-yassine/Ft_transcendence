@@ -17,6 +17,7 @@ import { CGR_ } from './create_friend_game.js';
 import { CTRN_ } from "./tournament.js";
 import { connectWebSocket  } from "./tournament_join.js";
 import fetchAndRenderProfile from "./friend_profile.js";
+import BlockedUserManager from "./deblock.js";
 
 document.addEventListener("click", (e) => {
   const { target } = e;
@@ -133,6 +134,11 @@ const urlRoutes = {
     template: "/templates/friend_profile/friend_profile.html",
     title: "Friend Profile",
     description: "Friend's Profile",
+  },
+  "/deblock_page": {
+    template: "/templates/deblock_page/deblock_page.html",
+    title: "Deblock page",
+    description: "Deblock page",
   },
 };
 
@@ -338,6 +344,8 @@ function handlePageScripts(location, friendProfileId = null) {
   else if (pageSelected === "tournament_join.html") {
     connectWebSocket();
   }
+  else if (pageSelected ==="deblock_page.html")
+    BlockedUserManager.initialize();
 }
 // On popstate (back and forward buttons)
 window.onpopstate = () => {

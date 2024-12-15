@@ -11,6 +11,9 @@ urlpatterns = [
 	path('is_friend_blocked/<int:friend_id>/', views.is_friend_blocked_view, name='is_friend_blocked'),
 	path('fetch_non_friends/', views.list_non_friends, name='fetch-non-friends'),
 	path("block_friend/<int:friend_id>/", views.block_friend, name="block_friend"),
+	path('check_block_status/', views.check_block_status, name='check_block_status'),
+	path('blocked-users/', views.get_blocked_users, name='blocked-users'),
+	path('unblock_user/', views.unblock_friend, name='blocked-users')
 	# path("users/", views.UserListView.as_view(), name="user-list"),
 ]
 

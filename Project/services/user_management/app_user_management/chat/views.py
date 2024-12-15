@@ -10,12 +10,174 @@ from user_managemanet.models import Friendship,CustomUser
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
+from django.conf import settings  
 
 @api_view(['GET'])
 def chathome(request):
     
     # print(f"USER ------------>  {request.user}")
     return Response("Welcome To chat 1337  page")
+
+
+
+# @api_view(['GET'])
+# def get_blocked_users(request):
+#     """
+#     Fetch all users blocked by the authenticated user.
+#     """
+#     # Get the authenticated user
+#     authenticated_user = request.user
+
+#     # Query Friendship model to find blocked users
+#     blocked_users = Friendship.objects.filter(user=authenticated_user, blocked=True).select_related('friend')
+
+#     # Format the data to return ID and username of the blocked users
+#     blocked_users_data = [
+#         {
+#             'id': friendship.friend.id,
+#             'username': friendship.friend.username,
+#             'avatar': friendship.friend.avatar,
+#         }
+#         for friendship in blocked_users
+#     ]
+
+#     return Response({'blocked_users': blocked_users_data})
+
+
+
+
+@api_view(['GET'])
+def get_blocked_users(request):
+    """
+    Fetch all users blocked by the authenticated user or where the friend has blocked them.
+    """
+    # Get the authenticated user
+    authenticated_user = request.user
+
+    if authenticated_user.is_anonymous:
+        return Response({"error": "Authentication required."}, status=401)
+
+    # Query Friendship to find blocked relationships
+    blocked_users = Friendship.objects.filter(
+        blocked=True,
+        blocked_by=authenticated_user  # Ensure we only check blocks initiated by the authenticated user
+    ).select_related('user', 'friend')
+
+    # Format the data to include user details, ensuring the friend is returned
+    blocked_users_data = []
+    for friendship in blocked_users:
+        # Determine who the friend is
+        if friendship.user == authenticated_user:
+            friend = friendship.friend
+        elif friendship.friend == authenticated_user:
+            friend = friendship.user
+        else:
+            continue  # Skip invalid data
+
+        avatar_url = (
+            request.build_absolute_uri(settings.MEDIA_URL + friend.avatar)
+            if friend.avatar
+            else request.build_absolute_uri(settings.MEDIA_URL + 'avatars/default_avatar.png')
+        )
+
+        # Append friend details
+        blocked_users_data.append({
+            'id': friend.id,
+            'username': friend.username,
+            'avatar': avatar_url,
+        })
+
+    return Response({'blocked_users': blocked_users_data}, status=200)
+
+
+
+
+
+
+
+
+@api_view(['GET'])
+def check_block_status(request):
+    # Get the target user ID from the request parameters
+    user_id = request.GET.get('id')
+    
+    # Validate user ID is provided
+    if not user_id:
+        return Response({"error": "User ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Get the authenticated user
+    current_user = request.user
+    if current_user.is_anonymous:
+        return Response({"error": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
+    
+    # Validate the target user exists
+    try:
+        target_user = CustomUser.objects.get(id=user_id)
+    except CustomUser.DoesNotExist:
+        return Response({"error": "Target user not found."}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Check if either user has blocked the other
+    is_blocked = Friendship.objects.filter(
+        Q(user=current_user, friend=target_user, blocked=True) | 
+        Q(user=target_user, friend=current_user, blocked=True)
+    ).exists()
+    
+    # Return the block status
+    return Response({
+        "is_blocked": is_blocked
+    }, status=status.HTTP_200_OK)
+
+@api_view(['PATCH'])
+def unblock_friend(request):
+    """
+    View to unblock a specific friend.
+    """
+    # Retrieve `friend_id` from the query parameters
+    friend_id = request.query_params.get('friend_id')
+
+    if not friend_id:
+        return Response({"detail": "Friend ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Get the authenticated user
+    user = request.user
+
+    # Ensure the friend exists
+    friend = get_object_or_404(CustomUser, id=friend_id)
+
+    # Find the friendship record where the current user is involved with the friend
+    friendship = Friendship.objects.filter(
+        user=user, friend=friend
+    ).first() or Friendship.objects.filter(
+        user=friend, friend=user
+    ).first()
+
+    if not friendship:
+        return Response({"detail": "Friendship not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    # If friendship exists, update the blocked status to False (unblock)
+    friendship.blocked = False
+    friendship.save()
+
+    return Response({"detail": "Friend successfully unblocked."}, status=status.HTTP_200_OK)
+
+    
+
+
+
+
+
+
+
+
+
+   
+
+
+
+
+
+
+
 
 @api_view(['PATCH'])
 def block_friend(request, friend_id):
@@ -39,11 +201,13 @@ def block_friend(request, friend_id):
     if not friendship:
         return Response({"detail": "Friendship not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    # If friendship exists, update the blocked status
+    # If friendship exists, update the blocked status and the blocked_by field
     friendship.blocked = True
+    friendship.blocked_by = user  # Save the authenticated user as the blocker
     friendship.save()
 
     return Response({"detail": "Friend successfully blocked."}, status=status.HTTP_200_OK)
+
 
 def get_non_friends(authenticated_user):
     friends = Friendship.objects.filter(

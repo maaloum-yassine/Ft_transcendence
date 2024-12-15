@@ -32,7 +32,14 @@ class Friendship(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     accepted = models.BooleanField(default=False)
     blocked = models.BooleanField(default=False)
-
+    blocked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='blocked_relationships',
+        help_text="The user who initiated the block"
+    )
     # class Meta:
     #       constraints = [
     #           models.UniqueConstraint(fields=['user', 'friend'], name='unique_friendship')
