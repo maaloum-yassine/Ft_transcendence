@@ -83,6 +83,7 @@ services:
     volumes:
       - ./services/front/front:/var/www/html/
       - static_volume:/var/www/html/media/avatars
+  
 # docker rmi $(docker images -q)
 # docker rm -f $(docker ps -aq)
 # docker volume prune

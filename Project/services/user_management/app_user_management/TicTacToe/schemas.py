@@ -1,16 +1,16 @@
-from pydantic import BaseModel, Field , validator
+from pydantic import BaseModel, Field, validator
 from typing import Optional
 
 class TicTacToeGameSchema(BaseModel):
     id: int
-    player_x: Optional[str] = None # Display username instead of ID
+    player_x: Optional[str] = None  # Display username instead of ID
     player_o: Optional[str] = None  # Allow None for Player O
     board_state: str
     current_turn: Optional[str] = None
     winner: Optional[str] = None  # Allow None for Winner
 
     class Config:
-        from_attributes = True
+        from_attributes = True  # This allows Pydantic to work with ORM models directly
 
     @classmethod
     def from_orm(cls, obj):
@@ -20,19 +20,29 @@ class TicTacToeGameSchema(BaseModel):
             player_o=obj.player_o.username if obj.player_o else None,
             board_state=obj.board_state,
             current_turn=obj.current_turn,
-            winner=obj.winner,
+            winner=obj.winner if obj.winner else None,
         )
+
+    # Coerce None to empty string for optional fields
+    @validator('player_o', always=True)
+    def coerce_none_to_empty(cls, v):
+        return v or ''
+
+    @validator('winner', always=True)
+    def coerce_none_to_empty_winner(cls, v):
+        return v or ''
+
     
 class GameResponseSchema(BaseModel):
     id: int
     player_x: str  # Expecting an integer (user ID)
-    player_o: str  # Expecting an integer (user ID)
+    player_o: Optional[str]  # Expecting an integer (user ID)
     board_state: str
-    winner: str
+    winner: Optional[str]
     status: str  # or any appropriate type
 
     class Config:
-        orm_mode = True  # This allows Pydantic to work with ORM models directly
+        from_attributes = True  # This allows Pydantic to work with ORM models directly
 
 
 class TicTacToeJoinGame(BaseModel):
