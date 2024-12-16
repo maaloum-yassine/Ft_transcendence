@@ -11,12 +11,9 @@ urlpatterns = [
     path('logout/',views.logout, name='logout'),
     path('profile/', views.profile, name='profile'),
     path('upload_avatar/', views.upload_avatar, name='upload_avatar'),
-    path('verify_email/<uidb64>/<token>/',views.verify_email, name='verify_email'),
     path('reset-password/', views.reset_password, name='request_password_reset'),
     path('reset-password/<uidb64>/<token>/', views.reset_password_user, name='reset_password'),
     path('otp/',views.otp, name='otp'),
-    path('send_verification_email/',views.send_verification_email, name='send_verification_email'),
-    path('verify_email/<uidb64>/<token>/', views.verify_email, name='verify_email'),
     path('active_2fa/',views.active_2fa, name='active_2fa'),
     ##############################View for friends##########################################
     path('send_friend_request/', views.send_friend_request, name='add_friend'),
@@ -32,23 +29,8 @@ urlpatterns = [
     path('authorize/', authentication_remote.authorize_42, name='authorize_42'),
     path('callback/', authentication_remote.callback_42, name='callback_42'),
     
+    # path('send_verification_email/',views.send_verification_email, name='send_verification_email'),
+    # path('verify_email/<uidb64>/<token>/',views.verify_email, name='verify_email'),
     # oauth_status
 ]
 # https://www.youtube.com/watch?v=gCDLNZB_FXc
-
-
-# http://localhost:8000/update/
-# http://localhost:8000/authorize/
-# http://localhost:8000/login/
-#    http://localhost:8000/oauth/callback//0
-
-
-
-{
-"username":"ymaaloumaa",
-"email":"maaloum.yassine@gmail.com",
-"first_name":"yassineaa",
-"last_name":"maaloik",
-"password":"0000AA",
-"confirm_password":"0000AA"
-}

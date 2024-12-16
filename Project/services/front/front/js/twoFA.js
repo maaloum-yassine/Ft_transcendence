@@ -25,7 +25,7 @@ function initTwoFA_endpoint(code) {
       return response.json();
     })
     .then((data) => {
-      history.pushState(null, "", "/profile");
+      history.pushState(null, "", "/home");
       urlLocationHandler();
     })
     .catch((error) => {

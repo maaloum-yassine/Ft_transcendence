@@ -12,19 +12,16 @@ from django.core.files.storage import default_storage
 
 @api_view(['GET'])
 def authorize_42(request:Request):
-    print("IM HERE AUUUUUUUUUUUUUUUUUUUU")
     return redirect(f"https://api.intra.42.fr/oauth/authorize?client_id={settings.CLIENT_ID_42}&redirect_uri={settings.REDIRECT_URI_42}&response_type=code&scope=public")
 
 @api_view(['GET', 'POST'])
 def callback_42(request:Request):
-    print("Im here ------------>>>>> Deuxeieme -->>  42424")
     response = Response()
     if 'error' in request.GET:
         error = request.GET.get('error')
         response = redirect(f'https://{settings.IP_ADRESS}')
         return response
     code = request.GET.get('code')
-    print(f"VOILA LE ------------------>>> code is {code}")
     token_response = requests.post("https://api.intra.42.fr/oauth/token", data={
         'grant_type': 'authorization_code',
         'client_id': settings.CLIENT_ID_42,
@@ -53,7 +50,7 @@ def callback_42(request:Request):
     user = models.CustomUser.objects.filter(Q(email=filtered_data['email'])).first()
     if user :
         token = utils.generate_token(user, True)
-        print("Im here au response de JWT 2")
+
         if user.active_2fa is True:
             user.code_otp , r_code_otp =  utils.generate_random(8)
             user.is_logged_2fa = True
@@ -63,9 +60,7 @@ def callback_42(request:Request):
             user.is_online = True
             response = redirect(f'https://{settings.IP_ADRESS}/home')
         user.save()
-        print("Im here au response de JWT 3")
         response.set_cookie(key ='jwt', value=token, httponly=True, secure=True, samesite='Strict')
-        print(f"Respone -------------------->>>>>>>>>>>>>>>>>>  {response}")
         return response
     image_url = user_data['image']['versions']['medium']
     user = models.CustomUser.objects.filter(Q(username=filtered_data['username'])).first()
@@ -151,7 +146,6 @@ def google_callback(request:Request):
     if response.status_code != 200:
         response = redirect(f'https://{settings.IP_ADRESS}/404')
         return response
-        # return Response({"error": "Erreur lors de la récupération des données utilisateur."}, status=response.status_code)
     user_data =  response.json()
     filtered_data = {
         'username': user_data['name'],
@@ -196,7 +190,6 @@ def google_callback(request:Request):
     response.data = {'jwt': token}
     return response
 
-#data IPA fr google
 
 
 

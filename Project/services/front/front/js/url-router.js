@@ -12,10 +12,10 @@ import run from "./tictactoe.js";
 import logout from "./logout.js";
 import initgame_tic from "./hndl_event_home.js";
 import ChatManager from "./chat.js";
-import { initFriendsModeGame } from './friends_mode.js';
-import { CGR_ } from './create_friend_game.js';
+import { initFriendsModeGame } from "./friends_mode.js";
+import { CGR_ } from "./create_friend_game.js";
 import { CTRN_ } from "./tournament.js";
-import { connectWebSocket  } from "./tournament_join.js";
+import { connectWebSocket } from "./tournament_join.js";
 import fetchAndRenderProfile from "./friend_profile.js";
 import BlockedUserManager from "./deblock.js";
 
@@ -130,7 +130,7 @@ const urlRoutes = {
     title: "Join Tournament Pong",
     description: "Join tournament to Play Pong with Friends",
   },
-  "/friend_profile/:id": {
+  "/friend_profile": {
     template: "/templates/friend_profile/friend_profile.html",
     title: "Friend Profile",
     description: "Friend's Profile",
@@ -142,17 +142,46 @@ const urlRoutes = {
   },
 };
 
+// const urlRoute = (event) => {
+//   event = event || window.event;
+//   event.preventDefault();
+
+//   const targetUrl = event.target.href || window.location.href;
+//   const path = new URL(targetUrl).pathname.toLowerCase();
+
+//   if (window.location.pathname !== path) {
+//     window.history.pushState({}, "", path);
+//   }
+//   urlLocationHandler(path);
+// };
 const urlRoute = (event) => {
   event = event || window.event;
   event.preventDefault();
 
   const targetUrl = event.target.href || window.location.href;
   const path = new URL(targetUrl).pathname.toLowerCase();
+  const searchParams = new URLSearchParams(new URL(targetUrl).search); // Récupère les paramètres de l'URL
+  const id = searchParams.get("id"); // Récupère le paramètre 'id' de l'URL
 
-  if (window.location.pathname !== path) {
-    window.history.pushState({}, "", path);
+  console.log("ID Param: ", id); // Vérifie l'ID dans la console
+
+  // Si un paramètre 'id' est présent dans l'URL
+  if (id) {
+    // Vérifie si l'URL actuelle est différente et inclut l'ID
+    if (
+      window.location.pathname !== path ||
+      window.location.search !== `?id=${id}`
+    ) {
+      window.history.pushState({}, "", `${path}?id=${id}`); // Met à jour l'URL avec l'ID
+      urlLocationHandler(path, id); // Passe l'ID à la fonction de traitement de la route
+    }
+  } else {
+    // Si l'ID n'est pas présent, laisse l'URL sans modification du paramètre 'id'
+    if (window.location.pathname !== path || window.location.search !== "") {
+      window.history.pushState({}, "", path); // Met à jour l'URL sans 'id'
+      urlLocationHandler(path); // Appelle la fonction sans l'ID
+    }
   }
-  urlLocationHandler(path);
 };
 
 async function check_authenticate() {
@@ -218,34 +247,13 @@ function isNotAuthenticatedRoute(location) {
 const urlLocationHandler = async (
   path = window.location.pathname.toLowerCase()
 ) => {
-  alert("CHEECKKK");
   let location = path;
-  console.log("urlLocationHandler called");
-  alert(path);
-  console.log(`Current Path: ${path}`);
-  // Vérification si l'URL se termine par un slash
-  // if (location.endsWith("/")) {
-  //   alert("I mhere");
-  //   location = location.slice(0, -1);
-  // }
+  const searchParams = new URLSearchParams(window.location.search);
+  const friendProfileId = searchParams.get("id");
 
-  // Authentication check
-
-  let friendProfileId = null;
-
-  const friendProfileMatch = location.match(/^\/friend_profile\/(\d+)$/); // Match numeric ID
-  if (friendProfileMatch) {
-    friendProfileId = friendProfileMatch[1]; // Extract the ID
-    location = "/friend_profile/:id"; // Normalize to match your urlRoutes
-    console.log(`Friend Profile ID: ${friendProfileId}`); // Debug log
-  }
-
-  // if (urlRoutes[location] == "/friend_profile/") {
-  //   alert("I me here 42424244");
-  // }
   const isAuthenticated = await check_authenticate();
 
-  let route = urlRoutes[location] || urlRoutes["/404"]; // Default to 404 if route doesn't exist
+  let route = urlRoutes[location] || urlRoutes["/404"]; // Route par défaut : 404
 
   if (location !== "/password_reset_confirm") {
     if (route !== urlRoutes["/404"]) {
@@ -322,29 +330,24 @@ function handlePageScripts(location, friendProfileId = null) {
     logout();
   } else if (pageSelected === "chat.html") {
     ChatManager.initialize();
+    logout();
   } else if (pageSelected === "friend_profile.html") {
-    alert(" I m here au profile");
-    custom();
+      custom();
     initProfile();
     if (friendProfileId) {
       fetchAndRenderProfile(friendProfileId);
     }
-    // logout();
-  }
-  else if (pageSelected === "friends_mode.html") {
+    logout();
+  } else if (pageSelected === "friends_mode.html") {
     const cleanup = initFriendsModeGame();
     window.gameCleanup = cleanup;
-  }
-  else if (pageSelected === "create_friends_game.html") {
+  } else if (pageSelected === "create_friends_game.html") {
     CGR_();
-  }
-  else if (pageSelected === "tournament.html") {
+  } else if (pageSelected === "tournament.html") {
     CTRN_();
-  }
-  else if (pageSelected === "tournament_join.html") {
+  } else if (pageSelected === "tournament_join.html") {
     connectWebSocket();
-  }
-  else if (pageSelected ==="deblock_page.html")
+  } else if (pageSelected === "deblock_page.html")
     BlockedUserManager.initialize();
 }
 // On popstate (back and forward buttons)

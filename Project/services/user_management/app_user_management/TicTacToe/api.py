@@ -18,10 +18,7 @@ def test_endpoint(request):
 def list_games(request, id_user: int):
     user = get_object_or_404(CustomUser, id=id_user)
     
-    # Fetch games where the user is either player_x or player_o
     games = TicTacToeGame.objects.filter(player_x=user) | TicTacToeGame.objects.filter(player_o=user)
-    
-    # Serialize the games, including player_x and player_o usernames
     serialized_games = [
         {
             "id": game.id,
@@ -40,10 +37,8 @@ def list_games(request, id_user: int):
 def user_stats(request, id_user: int):
     user = get_object_or_404(CustomUser, id=id_user)
     
-    # Fetch games where the user is either player_x or player_o
     games = TicTacToeGame.objects.filter(player_x=user) | TicTacToeGame.objects.filter(player_o=user)
 
-    # Initialize stats counters
     total_games = games.count()
     wins = 0
     losses = 0
@@ -156,14 +151,14 @@ def join_game(request, game_id: int, game_data: TicTacToeJoinGame):
         return JsonResponse({
             "error": "You are already Player X in this game.",
             "details": f"User {user_id} is already Player X"
-        }, status=400)
+        }, status=200)
 
     if game.player_o:
         if game.player_o.id == user_id:
            return JsonResponse({
             "error": "You are already Player X in this game.",
             "details": f"User {user_id} is already Player O"
-        }, status=400)
+        }, status=200)
         
         print("Debug: Game already has two players")
         return {

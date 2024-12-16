@@ -30,7 +30,7 @@ function run() {
     if (typeof boardState === "string") {
       return boardState.length === 9 && /^[XO-]{9}$/.test(boardState);
     }
-
+    console.log("anna");
     if (Array.isArray(boardState)) {
       return (
         boardState.length === 9 &&
@@ -99,9 +99,17 @@ function run() {
           {
             label: "Game Stats",
             data: [stats.wins, stats.losses, stats.draws],
-            backgroundColor: ["#00FF00", "#FF00FF", "#FFFF00"], // Neon green, pink, yellow
-            borderColor: ["#00FF00", "#FF00FF", "#FFFF00"], // Neon border colors
-            borderWidth: 2,
+            backgroundColor: [
+              "#00FF00", // Bright Neon Green for Wins
+              "#FF00FF", // Bright Neon Magenta for Losses
+              "#FFFF00", // Bright Neon Yellow for Draws
+            ],
+            borderColor: [
+              "#00FF00", // Neon Green border
+              "#FF00FF", // Neon Magenta border
+              "#FFFF00", // Neon Yellow border
+            ],
+            borderWidth: 3,
           },
         ],
       },
@@ -112,10 +120,10 @@ function run() {
             position: "top",
             labels: {
               font: {
-                family: "VT323",
-                size: 14,
+                family: "'VT323', monospace",
+                size: 18,
               },
-              color: "#00FF00", // Neon green legend
+              color: "#ff6b00",
             },
           },
           tooltip: {
@@ -128,13 +136,9 @@ function run() {
     });
   }
 
-  // Call fetchUserStats to display the stats when the page loads
-  // document.addEventListener('DOMContentLoaded', fetchUserStats);
-
   function handleCellClick(event) {
     const index = event.target.dataset.index;
-    console.log("clicled");
-    console.log(isMyTurn, event.target.textContent, currentGameId);
+    // console.log(isMyTurn, currentGameId)
 
     if (
       isMyTurn &&
@@ -142,7 +146,6 @@ function run() {
       currentGameId &&
       start_game
     ) {
-      console.log("make a move");
       makeMove(index);
     }
   }
@@ -153,12 +156,10 @@ function run() {
       return;
     }
 
-    console.log("make a move");
+    console.log("send the move");
     const updatedBoard = updateBoard(index);
-    console.log("made a move");
 
     const boardString = updatedBoard.join("");
-
     if (window.socket && window.socket.readyState === WebSocket.OPEN) {
       window.socket.send(
         JSON.stringify({
@@ -174,6 +175,7 @@ function run() {
     const cells = Array.from(gameBoard.children);
     cells[index].textContent = playerSymbol;
 
+    console.log("update the fucking board");
     return cells.map((cell) => cell.textContent || "-");
   }
 
@@ -268,28 +270,31 @@ function run() {
       newGameButton.disabled = false;
     }
   }
+
   async function fetchGames() {
-    const authResponse = await fetch(
-      ` https://${window.location.host}/api/badr/`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      }
-    );
-
-    if (!authResponse.ok) {
-      throw new Error(`Auth check failed! Status: ${authResponse.status}`);
-    }
-
-    const authData = await authResponse.json();
-    const userId = authData.user_id;
-    console.log("User ID:", userId);
-
     try {
-      const statsResponse = await fetch(
+      const authResponse = await fetch(
+        `https://${window.location.host}/api/badr/`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+
+      if (!authResponse.ok) {
+        throw new Error(
+          `Authentication failed! Status: ${authResponse.status}`
+        );
+      }
+
+      const authData = await authResponse.json();
+      const userId = authData.user_id;
+      console.log("Authenticated User ID:", userId);
+
+      const gamesResponse = await fetch(
         `${apiBaseUrl}/stats?id_user=${userId}`,
         {
           method: "POST",
@@ -300,43 +305,46 @@ function run() {
         }
       );
 
-      // Log the raw response
-      const responseText = await statsResponse.text();
-      console.log("Raw response:", responseText);
-
-      // Try parsing the response
-      let games;
-      try {
-        games = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error("Error parsing JSON:", parseError);
-        throw new Error("Failed to parse games response");
+      if (!gamesResponse.ok) {
+        throw new Error(
+          `Failed to fetch games! Status: ${gamesResponse.status}`
+        );
       }
 
-      // Verify games is an array
+      const games = await gamesResponse.json();
+
       if (!Array.isArray(games)) {
-        console.error("Response is not an array:", games);
+        console.error("Invalid games response:", games);
         throw new Error("Games response is not an array");
       }
 
-      // Clear and populate the game list
-      gameListElement.innerHTML = "";
+      gameListElement.innerHTML = ""; // Clear any previous games
       games.forEach((game) => {
         const gameItem = document.createElement("div");
 
-        // Construct a result message based on winner
-        let resultMessage = game.winner
-          ? `${game.winner} wins!`
-          : "Draw or game in progress";
+        const playerX = game.player_x || "Unknown Player X";
+        const playerO = game.player_o || "Unknown Player O";
+        const winner = game.winner;
+        const isDraw = winner === "D";
 
-        // Display the game information
-        gameItem.textContent = `Game ID: ${game.id} - Played with: ${game.player_x} vs ${game.player_o} - State: ${game.board_state} - Result: ${resultMessage}`;
+        let resultMessage = "Still in progress";
+        if (isDraw) {
+          resultMessage = "Draw";
+        } else if (winner) {
+          if (winner === userId) {
+            resultMessage = "You won!";
+          } else {
+            resultMessage = "You lost.";
+          }
+        } else {
+          resultMessage = "Still in progress";
+        }
 
-        // Append the game item to the game list
+        gameItem.textContent = `${playerX} played as X vs ${playerO} as O - Result: ${resultMessage}`;
         gameListElement.appendChild(gameItem);
       });
     } catch (error) {
-      console.error("Error fetching games:", error);
+      console.error("Error during fetchGames:", error);
       gameListElement.innerHTML = `<div>Error fetching games: ${error.message}</div>`;
     }
   }
@@ -350,7 +358,6 @@ function run() {
     }
 
     try {
-      // Check if user is authenticated
       const authResponse = await fetch(
         `https://${window.location.host}/api/badr/`,
         {
@@ -371,7 +378,6 @@ function run() {
       console.log("hada user_id dial li bgha yjoin ", userId);
       player_o = userId;
 
-      // Join game request
       const response = await fetch(`${apiBaseUrl}/games/${roomId}/join`, {
         method: "POST",
         headers: {
@@ -386,9 +392,7 @@ function run() {
 
       const data = await response.json();
 
-      // Check for errors
       if (!response.ok) {
-        // Display appropriate error message based on the response
         if (data.error) {
           statusElement.textContent = data.error;
         } else {
@@ -412,6 +416,7 @@ function run() {
 
   async function handleGameEnd(winner) {
     const cells = Array.from(gameBoard.children);
+
     cells.forEach((cell) => cell.classList.add("disabled")); // Disable all cells
 
     let gameStatus, winnerSymbol;
@@ -519,7 +524,7 @@ function run() {
           break;
 
         case "board_update":
-          console.log("Updating board:", message.board_state);
+          // console.log("Updating board:", message.board_state);
           renderBoard(message.board_state);
           isMyTurn = message.current_turn === playerSymbol;
           statusElement.textContent = isMyTurn
@@ -528,8 +533,11 @@ function run() {
           break;
 
         case "game_end":
-          handleGameEnd(message.winner);
+          console.log("Game ended. Updating board:", message.board_state);
+          renderBoard(message.board_state); // Use the correct board_state field
+          handleGameEnd(message.winner); // Call the game end handler with the winner
           break;
+
         case "error":
           console.log("errororo");
           break;

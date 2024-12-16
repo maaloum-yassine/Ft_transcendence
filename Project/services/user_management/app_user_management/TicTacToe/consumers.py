@@ -1,11 +1,16 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.auth import AuthMiddlewareStack
 
 class TicTacToeConsumer(AsyncWebsocketConsumer):
     # Class-level dictionary to track room states
     room_states = {}
 
     async def connect(self):
+        user = self.scope.get("user")
+        if not user.is_authenticated:
+            await self.close()
+            return
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = f"tictactoe_{self.room_name}"
 
@@ -54,7 +59,6 @@ class TicTacToeConsumer(AsyncWebsocketConsumer):
             print("Invalid move attempted!")
 
     async def check_win(self, board):
-    # Define all winning combinations
         winning_combinations = [
             [0, 1, 2], [3, 4, 5], [6, 7, 8],  # Rows
             [0, 3, 6], [1, 4, 7], [2, 5, 8],  # Columns
@@ -68,8 +72,7 @@ class TicTacToeConsumer(AsyncWebsocketConsumer):
         if all(cell is not None for cell in board):
             return "draw"  # If all cells are filled and no winner
 
-        return None  # No winner yet
-
+        return None
 
     async def send_board_update(self, position, symbol):
         print(f"Sending board update: {self.board_state}")
@@ -93,7 +96,6 @@ class TicTacToeConsumer(AsyncWebsocketConsumer):
         }))
     
     async def receive(self, text_data):
-        print("Received WebSocket message:", text_data)  # Debugging
         data = json.loads(text_data)
         message_type = data.get("type")
         room_state = self.room_states[self.room_name]
@@ -114,12 +116,8 @@ class TicTacToeConsumer(AsyncWebsocketConsumer):
 
             room_state['board'][position] = symbol
             room_state['current_turn'] = 'O' if symbol == 'X' else 'X'
-            # In your receive method
             winner = await self.check_win(room_state['board'])
-
-            print(winner)
             if winner:
-                # Broadcast the win or draw
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {
@@ -128,7 +126,6 @@ class TicTacToeConsumer(AsyncWebsocketConsumer):
                     }
                 )
             else:
-                # Broadcast the updated board
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {
@@ -139,7 +136,6 @@ class TicTacToeConsumer(AsyncWebsocketConsumer):
                         "current_turn": room_state['current_turn']
                     }
                 )
-            print("Sent group broadcast:", room_state['board'])
 
     async def game_update(self, event):
         print("Handling game_update event:", event)
@@ -150,13 +146,47 @@ class TicTacToeConsumer(AsyncWebsocketConsumer):
             "board_state": event["board_state"],
             "current_turn": event["current_turn"]
         }))
+    # async def game_end(self, event):
+    #     winner = event["winner"]
+    #     await self.send(text_data=json.dumps({
+    #         "type": "game_end",
+    #         "winner": winner,
+    #         "message": f"Game Over! {winner} wins!" if winner != "draw" else "Game Over! It's a draw."
+    #     }))
+    async def final_update(self, event):
+        winner = event["winner"]
+        loser = event["loser"]
+        final_board = event["board_state"]
+        message = event["message"]
+
+        if self.player_symbol == loser:
+            personal_message = "You lost! Better luck next time!"
+        elif self.player_symbol == winner:
+            personal_message = "Congratulations! You won!"
+        else:
+            personal_message = "It's a draw!"
+
+        await self.send(text_data=json.dumps({
+            "type": "game_end",
+            "board_state": final_board,
+            "winner": winner,
+            "message": message,
+            "personal_message": personal_message
+        }))
+
     async def game_end(self, event):
         winner = event["winner"]
+        room_state = self.room_states[self.room_name]
+        final_board = room_state['board']
+
+        # Send the final game state to the client
         await self.send(text_data=json.dumps({
             "type": "game_end",
             "winner": winner,
+            "board_state": final_board,
             "message": f"Game Over! {winner} wins!" if winner != "draw" else "Game Over! It's a draw."
         }))
+
 
     async def disconnect(self, close_code):
         if self.room_name in self.room_states:

@@ -80,18 +80,9 @@ def generate_random(length=8):
     hashed_code = hashlib.sha256(raw_code.encode()).hexdigest()
     return hashed_code, raw_code
 
-# def generate_random(length=8):
-#     """Générer un mot de passe aléatoire de la longueur spécifiée."""
-#     characters = string.ascii_letters + string.digits  # Lettres et chiffres
-#     raw_code =  ''.join(random.choice(characters) for _ in range(length))
-#     hashed_code = hashlib.sha256(raw_code.encode()).hexdigest()
-#     return hashed_code, raw_code
-
 
 def verify_code(input_code, user_code):
     hashed_input_code = hashlib.sha256(input_code.encode()).hexdigest()
-    print(f"code is --->> {hashed_input_code}")
-    print(f"user code is  --->> {user_code}")
     return hashed_input_code == user_code
 
 def   validate_passwords(passowrd, confirm_password):

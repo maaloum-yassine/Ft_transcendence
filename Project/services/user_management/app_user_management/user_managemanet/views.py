@@ -13,19 +13,16 @@ from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
 from rest_framework.exceptions import ValidationError
+from validators.user_validators import validate_password, validate_name, validate_username ,validate_email
+from . import utils, models, serializers , redis_config
+import json
 
 class PasswordValidationError(Exception):
     pass
 
-from . import utils, models, serializers , redis_config
-import json
-
-#CLEAN CODE AND MIDLWERE AND CREATE APPLICATION WITH CONTAINER WITH REDIS AND POSTGRESS AND CLEAN RESPONSE
-
 
 
 #************************************************HOME****************************************************************#
-
 
 
 @api_view(['GET'])
@@ -61,8 +58,8 @@ def signup(request:Request):
         validated_data['password'] = hashed_password
         fake_user = models.CustomUser(**validated_data)
         token , uid = generate_verification_token(fake_user, False)
-        # token = default_token_generator.make_token(fake_user)
-        # uid = urlsafe_base64_encode(force_bytes(fake_user.username))
+        
+        
         save_user_in_redis(validated_data)
         verification_link = f"https://{settings.IP_ADRESS}/verify?uid={uid}&token={token}/"
         html_message = render_to_string('verify_compte_template.html', {
@@ -92,7 +89,7 @@ def verify_account(request: Request, uidb64, token):
         user_data['is_email_verified'] = True
         user_data['active_2fa'] = False
         models.CustomUser.objects.create(**user_data)
-        print("Account successfully created")
+    
         redis_config.redis_client.delete(f"user:{uid}")
         html_message = render_to_string('registred.html', {
                 'reset_link': None,
@@ -114,7 +111,7 @@ def reset_password(request):
     try:
         user = models.CustomUser.objects.get(email=email)
         token , uid = generate_verification_token(user, True)
-        # reset_link = f"http:///127.0.0.1:5000/password_reset_confirm"
+        
         reset_link = f"https://{settings.IP_ADRESS}/password_reset_confirm?uid={uid}&token={token}/"
         html_message = render_to_string('email_template.html', {
             'reset_link': reset_link,
@@ -155,11 +152,10 @@ def reset_password_user(request, uidb64, token):
 @api_view(['PUT'])
 def update_passwod(request:Request):
     if request.data:
-        # print(f{data})
         user = request.user 
         new_pass = request.data.get("new_password")
         confirm_new_pass = request.data.get("confirm_password")
-        print(f"New_pass{new_pass} confirm_password {confirm_new_pass}" )
+    
         if new_pass and confirm_new_pass:   
             try:
                 utils.validate_passwords(new_pass ,confirm_new_pass)
@@ -172,31 +168,7 @@ def update_passwod(request:Request):
 #**************************************************************************************************************#
 
 #*********************************************UPDATE**************************************************************#
-from validators.user_validators import validate_password, validate_name, validate_username ,validate_email
 
-# @api_view(['PUT'])
-# def update(request:Request):
-#     if request.method == "GET":
-#         if request.user.is_anonymous:
-#             return redirect('home')
-#     user = request.user
-#     if request.data:
-#         try:
-#             validate_name(request.data["first_name"])
-#             validate_name(request.data["last_name"])
-#             validate_username(request.data["username"])
-#             print("IM here")
-#         except serializers.ValidationError as e:
-#             print(f"{e}")
-      
-#     return Response({"error": "aucun element changer"}, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-# from rest_framework.response import Response
-# from rest_framework.decorators import api_view
-# from rest_framework import status
-# from . import serializers
 
 @api_view(['PUT'])
 def update(request:Request):
@@ -230,10 +202,6 @@ def update(request:Request):
         return Response({"message": formatted_errors}, status=status.HTTP_400_BAD_REQUEST)
     return Response({"message": "aucun element changer"}, status=status.HTTP_400_BAD_REQUEST)
 
-
-
-
-
 #*********************************************UPLOAD-IMAGE*****************************************************************#
 
 @api_view(['POST'])
@@ -241,7 +209,6 @@ def upload_avatar(request:Request):
     if request.user.is_anonymous:
             return redirect('home')
     file = request.FILES.get('avatar')
-    print(f"file ==========>>>> {file}")
     if not file:
         return Response({"error": "Aucune image fournie"}, status=status.HTTP_400_BAD_REQUEST)
     fs = FileSystemStorage(location='media/avatars/')
@@ -292,8 +259,6 @@ def login(request: Request):
     return response
 
 
-# {'code_otp': [ErrorDetail
-# (string="Le code de vérification est invalide ou ne correspond pas à l'utilisateur.", code='invalid')]}
 
 @api_view(['POST'])
 def otp(request: Request):
@@ -313,15 +278,6 @@ def otp(request: Request):
             error_message = error_details[0]
         return Response({"message": error_message}, status=400)
 
-
-#**************************************************************************************************************#
-# @api_view(['POST'])
-# def otp(request: Request):
-
-# handl_otp
-
-#*************************************PROFILE*********************************************************************#
-
 @api_view(['GET'])
 def profile(request:Request):
     if request.user.is_anonymous:
@@ -335,12 +291,9 @@ def profile(request:Request):
 
 @api_view(['POST'])
 def send_friend_request(request: Request):
-#    
     try:
         user_end = request.user
-        print(f"USER is -------<<>>>>>>>> {request.user}")
         friend_name = models.CustomUser.objects.get(username=request.data.get("username_friend"))
-        print(f"friend_name-------->>> {friend_name}")
         if user_end == friend_name:
             return Response({"detail": "incorrect request"}, status=status.HTTP_404_NOT_FOUND)
         existing_friendship = models.Friendship.objects.filter(
@@ -357,8 +310,6 @@ def send_friend_request(request: Request):
 
 @api_view(['POST'])
 def accept_friend_request(request: Request):
-    if request.user.is_anonymous:
-        return redirect('home')
     username_friend = request.data.get("username_friend")
     if not username_friend:
         return Response({"detail": "username_friend is required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -376,23 +327,17 @@ def accept_friend_request(request: Request):
         return Response({"detail": "No invitation found."}, status=status.HTTP_404_NOT_FOUND)
 
 
-# Check None avatar for user_google
+
 @api_view(['GET'])
 def list_friends(request: Request):
-    if request.user.is_anonymous:
-        return redirect('home')
-    
-    # Find all non-blocked friendships
     friendships = models.Friendship.objects.filter(
         Q(user=request.user, friend__isnull=False) | 
         Q(friend=request.user, user__isnull=False), 
         accepted=True,
         blocked=False
     )
-    
     if not friendships:
         return Response({"detail": "No friend found."}, status=status.HTTP_200_OK)
-    
     friends_list = [
         {
             "auth_username": request.user.username,
@@ -400,21 +345,13 @@ def list_friends(request: Request):
         }
     ]
     
-    # Keep track of added friend IDs to prevent duplicates
     added_friend_ids = set()
     
     for friendship in friendships:
-        # Determine the friend user
         friend_user = friendship.friend if friendship.user == request.user else friendship.user
-        
-        # Skip if this friend has already been added
         if friend_user.id in added_friend_ids:
             continue
-        
-        # Mark this friend as added
         added_friend_ids.add(friend_user.id)
-        
-        # Handle avatar
         if utils.return_image(friend_user.avatar) is True:
             avatar = request.build_absolute_uri(settings.MEDIA_URL + friend_user.avatar).replace('http://', 'https://')
         else:
@@ -425,7 +362,6 @@ def list_friends(request: Request):
             "username": friend_user.username,
             "avatar": avatar
         })
-    
     return Response(friends_list, status=status.HTTP_200_OK)
 
 
@@ -451,118 +387,18 @@ def remove_friend(request: Request):
 
 @api_view(['GET'])
 def list_requst_friend(request: Request):
-    if request.user.is_anonymous:
-        return redirect('home')
-    
     list_request_friend = models.Friendship.objects.filter(Q(friend=request.user), accepted=False)
-    
     friend_requests = []
     for friendship in list_request_friend:
         if utils.return_image(friendship.user.avatar):
-            avatar = request.build_absolute_uri(settings.MEDIA_URL + friendship.user.avatar)
+            avatar = request.build_absolute_uri(settings.MEDIA_URL + friendship.user.avatar).replace('http://', 'https://')
         else:
-            avatar = request.build_absolute_uri(settings.MEDIA_URL + 'avatars/default_avatar.png')
+            avatar = request.build_absolute_uri(settings.MEDIA_URL + 'avatars/default_avatar.png').replace('http://', 'https://')
         friend_requests.append({
             "username": friendship.user.username,
             "avatar": avatar
         })
-    
-    # Always return "requests", even if empty
     return Response({"requests": friend_requests}, status=status.HTTP_200_OK)
-
-
-# @api_view(['GET'])
-# def search_friend(request: Request):
-#     if request.user.is_anonymous:
-#         return redirect('home')
-#     user_name = request.GET.get('q')
-#     if not user_name:
-#         return Response({"detail": "Enter username"}, status=status.HTTP_404_NOT_FOUND)
-#     elif request.user.username == user_name:
-#         return redirect("profile")
-#     try:
-#         user_friend = models.CustomUser.objects.get(username=user_name)
-#     except models.CustomUser.DoesNotExist:
-#         return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
-#     list_data_user = {}
-#     if utils.return_image(user_friend.avatar) is True:
-#         avatar = request.build_absolute_uri(settings.MEDIA_URL + user_friend.avatar)
-#     else :
-#         avatar = request.build_absolute_uri(settings.MEDIA_URL + 'avatars/default_avatar.png')
-#     list_data_user["username"] = user_friend.username
-#     list_data_user["avatar"] = avatar
-#     status_friendship = "not friend"
-#     existing_friendship = models.Friendship.objects.filter(Q(user=request.user, friend=user_friend) | Q(user=user_friend, friend=request.user)).first()
-#     if existing_friendship:
-#         if existing_friendship.accepted:
-#             status_friendship = "friend"
-#         else:
-#             status_friendship = "already invited"
-#     list_data_user["status_friendship"] = status_friendship
-#     return Response({"list_data_user": list_data_user}, status=status.HTTP_200_OK)
-
-
-
-
-
-@api_view(['GET'])
-def search_friend(request):
-    # Check if the user is authenticated
-    if request.user.is_anonymous:
-        return redirect('home')
-    print("I Mhere 1333333333333777")
-    # Get the friend's ID from the query parameter
-    user_id = request.GET.get('id')
-    if not user_id:
-        return Response({"detail": "Enter a valid ID"}, status=status.HTTP_404_NOT_FOUND)
-
-    try:
-        # Search for the friend by ID
-        user_friend = models.CustomUser.objects.get(id=user_id)
-    except models.CustomUser.DoesNotExist:
-        return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
-
-    # Redirect if the user is searching for their own ID
-    if request.user.id == user_friend.id:
-        return redirect("profile")
-
-    # Build the friend's data response
-    list_data_user = {}
-    if utils.return_image(user_friend.avatar):
-        avatar = request.build_absolute_uri(settings.MEDIA_URL + user_friend.avatar).replace('http://', 'https://')
-    else:
-        avatar = request.build_absolute_uri(settings.MEDIA_URL + 'avatars/default_avatar.png').replace('http://', 'https://')
-    
-    list_data_user["id"] = user_friend.id  # Return the friend's ID
-    list_data_user["username"] = user_friend.username
-    list_data_user["avatar"] = avatar
-
-    # Check the friendship status
-    status_friendship = "not friend"
-    existing_friendship = models.Friendship.objects.filter(
-        Q(user=request.user, friend=user_friend) | Q(user=user_friend, friend=request.user)
-    ).first()
-
-    if existing_friendship:
-        if existing_friendship.accepted:
-            status_friendship = "friend"
-        else:
-            status_friendship = "already invited"
-
-    list_data_user["status_friendship"] = status_friendship
-
-    return Response({"list_data_user": list_data_user}, status=status.HTTP_200_OK)
-
-
-
-
-
-
-
-
-
-
-
 
 
 #**************************************************ACTIVAE 2FA************************************************************#
@@ -581,36 +417,71 @@ def active_2fa(request:Request):
 
 
 
-
 @api_view(['GET'])
-def send_verification_email(request):
+def search_friend(request):    
+    if request.user.is_anonymous:
+        return redirect('home')
+    user_id = request.GET.get('id')
+    if not user_id:
+        return Response({"detail": "Enter a valid ID"}, status=status.HTTP_404_NOT_FOUND)
     try:
-        token , uid = generate_verification_token(request.user, True)
-        verification_link = f"https://localhost:443/verify_email/{uid}/{token}/"
-        html_message = render_to_string('verify_email_template.html', {
-            'verification_link': verification_link,
-        })
-        utils.send_email(request.user.email, html_message, False)
-        print(f"{request.user.email}")
-        return Response({"message": "A verification email has been sent."}, status=status.HTTP_200_OK)
+        user_friend = models.CustomUser.objects.get(id=user_id)
     except models.CustomUser.DoesNotExist:
-        return Response({"error": "This email does not exist."}, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['GET'])
-def verify_email(request, uidb64, token):
-    try:
-        uid = urlsafe_base64_decode(uidb64).decode()
-        user = models.CustomUser.objects.get(pk=uid)
-        if default_token_generator.check_token(user, token):
-            user.is_email_verified = True
-            user.active_2fa = True
-            user.save()
-            return Response({"message": "Your email has been successfully verified."}, status=status.HTTP_200_OK)
+        return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+    list_data_user = {}
+    if request.user.id == user_friend.id:
+        list_data_user["id"] = request.user.id  
+        list_data_user["username"] = request.user.username
+        list_data_user["avatar"] = request.build_absolute_uri(settings.MEDIA_URL + request.user.avatar).replace('http://', 'https://')
+        return Response({"list_data_user": list_data_user}, status=status.HTTP_200_OK)
+    if utils.return_image(user_friend.avatar):
+        avatar = request.build_absolute_uri(settings.MEDIA_URL + user_friend.avatar).replace('http://', 'https://')
+    else:
+        avatar = request.build_absolute_uri(settings.MEDIA_URL + 'avatars/default_avatar.png').replace('http://', 'https://')
+    list_data_user["id"] = user_friend.id  
+    list_data_user["username"] = user_friend.username
+    list_data_user["avatar"] = avatar
+    status_friendship = "not friend"
+    existing_friendship = models.Friendship.objects.filter(
+        Q(user=request.user, friend=user_friend) | Q(user=user_friend, friend=request.user)
+    ).first()
+    if existing_friendship:
+        if existing_friendship.accepted:
+            status_friendship = "friend"
         else:
-            return Response({"error": "The verification link is invalid."}, status=status.HTTP_400_BAD_REQUEST)
-    except models.CustomUser.DoesNotExist:
-        return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            status_friendship = "already invited"
+    list_data_user["status_friendship"] = status_friendship
+    return Response({"list_data_user": list_data_user}, status=status.HTTP_200_OK)
+
+# @api_view(['GET'])
+# def send_verification_email(request):
+#     try:
+#         token , uid = generate_verification_token(request.user, True)
+#         verification_link = f"https://localhost:443/verify_email/{uid}/{token}/"
+#         html_message = render_to_string('verify_email_template.html', {
+#             'verification_link': verification_link,
+#         })
+#         utils.send_email(request.user.email, html_message, False)
+    
+#         return Response({"message": "A verification email has been sent."}, status=status.HTTP_200_OK)
+#     except models.CustomUser.DoesNotExist:
+#         return Response({"error": "This email does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# @api_view(['GET'])
+# def verify_email(request, uidb64, token):
+#     try:
+#         uid = urlsafe_base64_decode(uidb64).decode()
+#         user = models.CustomUser.objects.get(pk=uid)
+#         if default_token_generator.check_token(user, token):
+#             user.is_email_verified = True
+#             user.active_2fa = True
+#             user.save()
+#             return Response({"message": "Your email has been successfully verified."}, status=status.HTTP_200_OK)
+#         else:
+#             return Response({"error": "The verification link is invalid."}, status=status.HTTP_400_BAD_REQUEST)
+#     except models.CustomUser.DoesNotExist:
+#         return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+#     except Exception as e:
+#         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 #**************************************************************************************************************#
