@@ -20,21 +20,21 @@
     image-rendering: -moz-crisp-edges;
     image-rendering: -webkit-crisp-edges;
     image-rendering: pixelated;
-    image-rendering: crisp-edges;
+    /* image-rendering: crisp-edges; */
 }
 
 body {
     /* font-family: 'VT323', monospace; */
-    background-color: var(--bg-black);
+    /* background-color: var(--bg-black); */
     color: var(--text-orange);
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    background: 
+    /* background: 
         linear-gradient(45deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.9) 100%),
-        repeating-linear-gradient(0deg, rgba(255,107,0,0.02) 0, rgba(255,107,0,0.02) 1px, transparent 1px, transparent 2px);
+        repeating-linear-gradient(0deg, rgba(255,107,0,0.02) 0, rgba(255,107,0,0.02) 1px, transparent 1px, transparent 2px); */
 }
 
 .pixel-border {
@@ -167,7 +167,7 @@ body {
 }
 
 /* CRT Screen Effect */
-body::before {
+/* body::before {
     content: "";
     position: fixed;
     top: 0;
@@ -181,7 +181,7 @@ body::before {
     pointer-events: none;
     z-index: 9999;
     opacity: 0.1;
-}
+} */
 
 /* Responsive Adjustments */
 @media (max-width: 480px) {
