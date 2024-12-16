@@ -44,8 +44,6 @@ const handleTwoFA = (e) => {
 
   if (code.length === 8) {
     initTwoFA_endpoint(code);
-    // console.log("Verification code:", code);
-    // fun_sign.alert_message("Code submitted for verification");
   } else {
     fun_sign.alert_message("Please enter a complete 8-digit code");
   }

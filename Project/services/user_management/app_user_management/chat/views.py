@@ -75,9 +75,9 @@ def get_blocked_users(request):
             continue  # Skip invalid data
 
         avatar_url = (
-            request.build_absolute_uri(settings.MEDIA_URL + friend.avatar)
+            request.build_absolute_uri(settings.MEDIA_URL + friend.avatar).replace('http://', 'https://')
             if friend.avatar
-            else request.build_absolute_uri(settings.MEDIA_URL + 'avatars/default_avatar.png')
+            else request.build_absolute_uri(settings.MEDIA_URL + 'avatars/default_avatar.png').replace('http://', 'https://')
         )
 
         # Append friend details

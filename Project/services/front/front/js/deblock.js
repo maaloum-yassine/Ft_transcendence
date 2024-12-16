@@ -1,3 +1,5 @@
+import fun_sign from "./signin.js";
+
 const BlockedUserManager = (() => {
   let blockedUsers = [];
   let userListContainer;
@@ -59,8 +61,8 @@ const BlockedUserManager = (() => {
 
       const data = await response.json();
       console.log(`User with ID ${userId} unblocked:`, data);
-      alert(`User has been unblocked!`);
-
+      fun_sign.alert_message(`User has been unblocked!`);
+      fun_sign.initFeedBack();
       await fetchBlockedUsers(); // Refresh blocked users list
     } catch (error) {
       console.error(`Failed to unblock user with ID ${userId}:`, error);
@@ -88,7 +90,8 @@ const BlockedUserManager = (() => {
 
       const data = await response.json();
       console.log(`User ${username} removed:`, data);
-      alert(`User ${username} has been removed!`);
+      fun_sign.alert_message(`User ${username} has been removed!`);
+      fun_sign.initFeedBack();
 
       await fetchBlockedUsers(); // Refresh blocked users list
     } catch (error) {

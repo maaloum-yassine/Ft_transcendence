@@ -59,19 +59,20 @@ const edit = () => {
           const avatarUrl = data.data.avatar;
           if (avatarUrl) {
             profilePhoto.src = avatarUrl;
-            alert(avatarUrl);
             profilePhoto.style.display = "block";
           } else {
             profilePhoto.src = "/path/to/default/avatar.jpg";
           }
         }
       } else {
-        alert("Erreur lors du chargement des données du profil.");
+        fun_sign.alert_message(
+          "Erreur lors du chargement des données du profil."
+        );
       }
     })
     .catch((error) => {
       console.error("Erreur:", error);
-      alert(
+      fun_sign.alert_message(
         "Une erreur est survenue lors du chargement des données du profil."
       );
     });
@@ -229,7 +230,7 @@ const edit = () => {
         .then((responseData) => {
           fun_sign.alert_message("Success", "Password reset successfully!");
           setTimeout(() => {
-            history.pushState(null, "", "/profile");
+            history.pushState(null, "", "/home");
             urlLocationHandler();
           }, 2000);
           return;
@@ -260,24 +261,26 @@ const edit = () => {
           .then((data) => {
             console.log(data);
             if (data.avatar_url) {
-              if (profilePhoto) {
-                alert(data.avatar_url);
-                // profilePhoto.src = data.avatar_url;
-              }
-              alert("Photo de profil mise à jour avec succès !");
+              fun_sign.alert_message(
+                "Photo de profil mise à jour avec succès !"
+              );
               if (imageUploadModal) {
                 imageUploadModal.style.display = "none";
               }
             } else {
-              alert("Erreur lors du téléchargement de la photo");
+              fun_sign.alert_message(
+                "Erreur lors du téléchargement de la photo"
+              );
             }
           })
           .catch((error) => {
             console.error("Erreur:", error);
-            alert("Une erreur est survenue lors du téléchargement de l'image.");
+            fun_sign.alert_message(
+              "Une erreur est survenue lors du téléchargement de l'image."
+            );
           });
       } else {
-        alert("Veuillez sélectionner une image");
+        fun_sign.alert_message("Veuillez sélectionner une image");
       }
     });
   }

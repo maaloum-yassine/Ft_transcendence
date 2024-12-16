@@ -142,18 +142,7 @@ const urlRoutes = {
   },
 };
 
-// const urlRoute = (event) => {
-//   event = event || window.event;
-//   event.preventDefault();
 
-//   const targetUrl = event.target.href || window.location.href;
-//   const path = new URL(targetUrl).pathname.toLowerCase();
-
-//   if (window.location.pathname !== path) {
-//     window.history.pushState({}, "", path);
-//   }
-//   urlLocationHandler(path);
-// };
 const urlRoute = (event) => {
   event = event || window.event;
   event.preventDefault();

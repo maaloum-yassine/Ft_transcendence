@@ -1,3 +1,5 @@
+import fun_sign from "./signin.js";
+
 const ChatManager = (() => {
   // Private variables
   let friends = [];
@@ -49,41 +51,41 @@ const ChatManager = (() => {
   const createFriendElement = (friend) => {
     return `
 		<li class="selectable-item friend" 
-			data-id="${friend.id}"
-			data-name="${friend.name || "Unnamed"}"
-			data-authid="${friend.auth_user_id}"
-			data-authname="${friend.auth_user_name}">
-		  <div class="avatarContainer">
-			<img src="${friend.imageURL || "default-avatar.jpg"}" 
-				 class="avatar" 
-				 alt="${friend.name || "No avatar"}">
-		  </div>
-		  ${friend.name || "Unnamed"}
-		  <span class="connected-icon connected connected${friend.id}" 
+    data-id="${friend.id}"
+    data-name="${friend.name || "Unnamed"}"
+    data-authid="${friend.auth_user_id}"
+    data-authname="${friend.auth_user_name}">
+    <div class="avatarContainer">
+    <img src="${friend.imageURL || "default-avatar.jpg"}" 
+    class="avatar" 
+    alt="${friend.name || "No avatar"}">
+    </div>
+    ${friend.name || "Unnamed"}
+    <span class="connected-icon connected connected${friend.id}" 
 				style="display: ${friend.isOnline ? "block" : "none"}">🟢</span>
 		  <span class="notification-bell notification${friend.id}" 
-				style="display: none">🔔</span>
-		</li>
-	  `;
+      style="display: none">🔔</span>
+      </li>
+      `;
   };
 
   const updateContactInfo = (contactInfo, friend) => {
     contactInfo.innerHTML = `
-<h1 class="friend_name">${friend.name || "Unnamed"}</h1>
-<nav class="user-panel" aria-label="User actions">
-  <a href="/friend_profile?id=${
-    friend.id
-  }" class="panel-option" aria-label="View profile">
-    View profile
-  </a>
-  <a href="#" class="panel-option" aria-label="Invite to a game">
-    Invite to a game
-  </a>
-  <a href="#" id="block" class="panel-option" aria-label="Block">
-    Block
-  </a>
-</nav>
-	  `;
+      <h1 class="friend_name">${friend.name || "Unnamed"}</h1>
+      <nav class="user-panel" aria-label="User actions">
+      <a href="/friend_profile?id=${
+        friend.id
+      }" class="panel-option" aria-label="View profile">
+      View profile
+      </a>
+      <a href="#" class="panel-option" aria-label="Invite to a game">
+      Invite to a game
+      </a>
+      <a href="#" id="block" class="panel-option" aria-label="Block">
+      Block
+      </a>
+      </nav>
+      `;
   };
 
   const createMessageElement = (messageData) => {
@@ -500,7 +502,8 @@ const ChatManager = (() => {
     inviteToGameLink.setAttribute("aria-label", "Invite to a game");
     inviteToGameLink.textContent = "Invite to a game";
     inviteToGameLink.onclick = () => {
-      alert(`Invitation sent to ${friend.name}`);
+      fun_sign.alert_message(`Invitation sent to ${friend.name}`);
+      fun_sign.initFeedBack();
     };
 
     // Create "Block" link
@@ -516,10 +519,10 @@ const ChatManager = (() => {
         await blockFriend(friend.id);
         handleSuccessfulBlock(friend, contactInfo);
       } catch (error) {
-        console.error("Error blocking friend:", error);
-        alert(
+        fun_sign.alert_message(
           "There was an error blocking the friend. Please try again later."
         );
+        fun_sign.initFeedBack();
       }
     };
     contactInfo.appendChild(imgprofile);
@@ -562,8 +565,8 @@ const ChatManager = (() => {
           await blockFriend(friend.id);
           handleSuccessfulBlock(friend, element);
         } catch (error) {
-          console.error("Error blocking friend:", error);
-          alert(
+          fun_sign.initFeedBack();
+          fun_sign.alert_message(
             "There was an error blocking the friend. Please try again later."
           );
         }
@@ -581,7 +584,8 @@ const ChatManager = (() => {
     }
   };
   const handleSuccessfulBlock = (friend, element) => {
-    alert(`You have successfully blocked ${friend.name}`);
+    fun_sign.initFeedBack();
+    fun_sign.alert_message(`You have successfully blocked ${friend.name}`);
     element.style.display = "none";
 
     const contactImage = getElement("#contact-image");
@@ -635,7 +639,8 @@ const ChatManager = (() => {
         }
       } else {
         const imge = document.getElementById("contact-image");
-        alert("the user is blocked");
+        fun_sign.alert_message("the user is blocked");
+        fun_sign.initFeedBack();
         removeFriendElement(receiver);
         deleteAll("chat-window");
         const img = document.getElementById("contact-image");
@@ -661,7 +666,6 @@ const ChatManager = (() => {
         if (!bfriend) {
           if (activeChatSelected) await handleMessageSend(messageInput); // Await the async operatio
         } else {
-          alert(bfriend);
           removeFriendElement(receiver);
           deleteAll("chat-window");
           const img = document.getElementById("contact-image");
@@ -699,7 +703,6 @@ const ChatManager = (() => {
   const initialize = async () => {
     try {
       const userData = await fetchFriends();
-      console.log(userData);
       processFriendsData(userData);
       initializeWebSockets();
       initializeFriendsList();
