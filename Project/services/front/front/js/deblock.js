@@ -104,7 +104,7 @@ const BlockedUserManager = (() => {
     if (dataList.length === 0) {
       userListContainer.innerHTML = `
 		  <h2>Blocked Users</h2>
-		  <p style="text-align: center; color: gray;">No blocked users found.</p>
+		  <p style="text-align: center; color: white;">No blocked users found.</p>
 		`;
       return;
     }
@@ -117,11 +117,11 @@ const BlockedUserManager = (() => {
 			  <div class="blocked-user">
 				<div class="user-info">
 				  <img src="${data.avatar}" alt="${data.username}" class="user-image" />
-				  <p>${data.username}</p>
+				  <p class="username">${data.username}</p>
 				</div>
 				<div class="actions">
-				  <button class="unblock-btn" data-id="${data.id}">Unblock</button>
-				  <button class="remove-btn" data-username="${data.username}">Remove</button>
+				  <button class="button" data-id="${data.id}">Unblock</button>
+				  <button class="button" data-username="${data.username}">Remove</button>
 				</div>
 			  </div>
 			`
@@ -130,7 +130,7 @@ const BlockedUserManager = (() => {
 	  `;
 
     // Add event listeners to unblock buttons
-    document.querySelectorAll(".unblock-btn").forEach((button) => {
+    document.querySelectorAll(".button").forEach((button) => {
       button.addEventListener("click", () => {
         const userId = button.getAttribute("data-id"); // Fetch the user ID
         unblockUser(userId); // Pass the user ID to the unblock function
@@ -138,7 +138,7 @@ const BlockedUserManager = (() => {
     });
 
     // Add event listeners to remove buttons
-    document.querySelectorAll(".remove-btn").forEach((button) => {
+    document.querySelectorAll(".button").forEach((button) => {
       button.addEventListener("click", () => {
         const username = button.getAttribute("data-username"); // Fetch the username
         removeUser(username); // Pass the username to the remove function

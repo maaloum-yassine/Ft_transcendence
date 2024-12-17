@@ -183,7 +183,7 @@ const FriendManager = (() => {
                       ${
                         currentMode === "users"
                           ? `
-                          <button class="action-btn user-btn" data-username="${
+                          <button class="action-btn chat-user-btn" data-username="${
                             data.name
                           }" 
                               style="display: ${
@@ -197,7 +197,7 @@ const FriendManager = (() => {
                       ${
                         currentMode === "friendRequests"
                           ? `
-                          <button class="action-btn user-btn visible" data-username="${data.name}">
+                          <button class="action-btn chat-user-btn visible" data-username="${data.name}">
                               Accept
                           </button>
                           <button class="reject-btn visible" data-username="${data.name}">
@@ -212,7 +212,7 @@ const FriendManager = (() => {
                 .join("")}
           `;
 
-    document.querySelectorAll(".action-btn.user-btn").forEach((button) => {
+    document.querySelectorAll(".action-btn.chat-user-btn").forEach((button) => {
       button.addEventListener("click", () => {
         const username = button.getAttribute("data-username");
         if (currentMode === "users") {

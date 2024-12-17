@@ -19,11 +19,11 @@
 }
 /* Example CSS for user images */
 .user-image {
-    width: 50px;  /* Set the desired width */
-    height: 50px; /* Set the desired height */
-    border-radius: 50%; /* Make the image circular */
-    object-fit: cover; /* Ensure the image fits within the circle */
-    margin-right: 10px; /* Space between image and username */
+    width: 84px;
+	height: 84px;
+	border-radius: 50%;
+	object-fit: cover;
+	margin-right: 10px;
   }
   
   /* Style for blocked users list */
@@ -103,7 +103,7 @@
 
 /* User Block */
 .user {
-    background-color: rgba(0, 0, 0, 0.75); /* Dark block with transparency */
+    background-color: rgba(0, 0, 0, 0.75);
     border-radius: 20px;
     padding: 25px;
     display: flex;
@@ -111,22 +111,23 @@
     justify-content: space-between;
     margin-bottom: 25px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-    width: 100%; /* Adjust to container-friend width */
-    max-width: 1800px; /* Increase maximum block width */
+    width: 100%;
+    max-width: 1800px;
 }
 
 /* User Image */
 .user img {
-    width: 120px; /* Increased size */
-    height: 120px;
+    width: 96px;
+    height: 96px;
     border-radius: 50%;
-    box-shadow: 0 0 15px rgba(255, 140, 0, 0.8); /* Glowing effect */
+    box-shadow: 0 0 15px rgba(255, 140, 0, 0.8);
+	object-fit: cover;
 }
 
 /* User Name */
-.user p {
-    margin: 0 20px;
-    font-size: 24px;
+.username {
+    margin: 0 15px;
+    font-size: 20px;
     color: #fff;
     text-align: left;
     flex-grow: 1;
@@ -135,14 +136,15 @@
 
 /* Buttons */
 .user-btn, .reject-btn {
-    padding: 12px 20px;
-    font-size: 22px;
-    border-radius: 15px;
-    font-weight: bold;
-    text-transform: uppercase;
-    cursor: pointer;
-    border: none;
-    transition: all 0.3s ease-in-out;
+    padding: 6px 10px;
+	font-size: 15px;
+	border-radius: 15px;
+	font-weight: bold;
+	text-transform: uppercase;
+	cursor: pointer;
+	border: none;
+	transition: all 0.3s ease-in-out;
+
 }
 
 /* Accept Button */
