@@ -20,32 +20,6 @@ def chathome(request):
 
 
 
-# @api_view(['GET'])
-# def get_blocked_users(request):
-#     """
-#     Fetch all users blocked by the authenticated user.
-#     """
-#     # Get the authenticated user
-#     authenticated_user = request.user
-
-#     # Query Friendship model to find blocked users
-#     blocked_users = Friendship.objects.filter(user=authenticated_user, blocked=True).select_related('friend')
-
-#     # Format the data to return ID and username of the blocked users
-#     blocked_users_data = [
-#         {
-#             'id': friendship.friend.id,
-#             'username': friendship.friend.username,
-#             'avatar': friendship.friend.avatar,
-#         }
-#         for friendship in blocked_users
-#     ]
-
-#     return Response({'blocked_users': blocked_users_data})
-
-
-
-
 @api_view(['GET'])
 def get_blocked_users(request):
     """

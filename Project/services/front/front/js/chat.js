@@ -1,7 +1,6 @@
 import fun_sign from "./signin.js";
 
 const ChatManager = (() => {
-  // Private variables
   let friends = [];
   let filteredFriends = [];
   let notificationSocket = null;
@@ -12,7 +11,7 @@ const ChatManager = (() => {
   let receiverName = null;
   let activeChatSelected = false;
   const messageQueue = [];
-  let onlineUsers = new Set(); // Track online users
+  let onlineUsers = new Set();
 
   const createWebSocket = (url) => {
     const protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
@@ -26,8 +25,6 @@ const ChatManager = (() => {
   const scrollToBottom = (element) => {
     element.scrollTop = element.scrollHeight;
   };
-
-  // DOM utility functions
   const getElement = (selector) => document.querySelector(selector);
   const getElements = (selector) => document.querySelectorAll(selector);
 
@@ -142,15 +139,14 @@ const ChatManager = (() => {
           "Error fetching block status:",
           errorData.error || response.statusText
         );
-        return false; // Assume not blocked on failure to fetch
+        return false;
       }
 
       const data = await response.json();
-      console.log("Block Status:", data.is_blocked);
-      return data.is_blocked; // Properly return the block status
+      return data.is_blocked;
     } catch (error) {
       console.error("Error fetching block status:", error);
-      return false; // Assume not blocked on error
+      return false; 
     }
   };
   const blockFriend = async (friendId) => {
@@ -217,9 +213,7 @@ const ChatManager = (() => {
     if (!notificationSocket) return;
 
     notificationSocket.onmessage = (e) => {
-      console.log("hnaaaaaaaaaa");
       const data = JSON.parse(e.data);
-
       const paragraph = getElement(`span.notification${data.sender}`);
       if (paragraph) {
         paragraph.style.display = "block";
@@ -230,16 +224,12 @@ const ChatManager = (() => {
   const setupConnectSocketMessages = (connectSocket) => {
     connectSocket.onmessage = (e) => {
       const data = JSON.parse(e.data);
-
-      // Update online status in friends array
       friends = friends.map((friend) => ({
         ...friend,
         isOnline: data.connected_users.some(
           (user) => user.user_id === friend.id
         ),
       }));
-
-      // Update filtered friends if they exist
       if (filteredFriends.length > 0) {
         filteredFriends = filteredFriends.map((friend) => ({
           ...friend,
@@ -449,7 +439,9 @@ const ChatManager = (() => {
       });
     });
   };
-
+  function randomInteger(max) {
+    return Math.floor(Math.random() * max);
+  }
   const selectFriend = (friend, element) => {
     const notificationElement = getElement(`span.notification${friend.id}`);
     if (notificationElement) {
@@ -461,10 +453,7 @@ const ChatManager = (() => {
     if (contactImage) {
       contactImage.src = friend.imageURL || "default-image.png";
     }
-
-    // Dynamically create the action links
     createActionLinks(friend);
-
     setupChatSocket(friend);
     setupBlockButton(friend, element);
   };
@@ -502,8 +491,11 @@ const ChatManager = (() => {
     inviteToGameLink.setAttribute("aria-label", "Invite to a game");
     inviteToGameLink.textContent = "Invite to a game";
     inviteToGameLink.onclick = () => {
-      fun_sign.alert_message(`Invitation sent to ${friend.name}`);
-      fun_sign.initFeedBack();
+    sendMessage("https://127.0.0.1/create_friends_game");
+    sendMessage("The Game is created with the id  " + randomInteger(100000000));
+    fun_sign.initFeedBack();
+    fun_sign.alert_message(`Invitation sent to ${friend.name}`);
+    sendNotification();
     };
 
     // Create "Block" link
@@ -627,20 +619,19 @@ const ChatManager = (() => {
 
     messageInput.onkeyup = async (e) => {
       const bfriend = await isBlockFriend(receiver);
-      // console.log("bfriend value:", bfriend);
 
-      if (!bfriend) {
-        console.log(bfriend);
-        if (e.keyCode === 13 && activeChatSelected) {
-          await handleMessageSend(messageInput); // Await the async operation
-          // const img = document.getElementById("contact-image");
-          // img.src = "s";
-          // img.alt="_"
+
+      if (!bfriend) 
+      {
+        if (e.keyCode === 13 && activeChatSelected) 
+        {
+          await handleMessageSend(messageInput); 
         }
       } else {
         const imge = document.getElementById("contact-image");
-        fun_sign.alert_message("the user is blocked");
         fun_sign.initFeedBack();
+        fun_sign.alert_message("the user is blocked");
+      
         removeFriendElement(receiver);
         deleteAll("chat-window");
         const img = document.getElementById("contact-image");
@@ -662,16 +653,15 @@ const ChatManager = (() => {
     if (messagesend) {
       messagesend.onclick = async () => {
         const bfriend = await isBlockFriend(receiver);
-        // console.log("bfriend value:", bfriend);
         if (!bfriend) {
-          if (activeChatSelected) await handleMessageSend(messageInput); // Await the async operatio
+          if (activeChatSelected) await handleMessageSend(messageInput); 
         } else {
           removeFriendElement(receiver);
           deleteAll("chat-window");
           const img = document.getElementById("contact-image");
           img.src = "";
           img.alt = "";
-          const panelOptions = document.querySelectorAll("a.chat-button"); // Select all <a> with class "chat-button"
+          const panelOptions = document.querySelectorAll("a.chat-button"); 
           panelOptions.forEach((option) => {
             option.remove();
           });
