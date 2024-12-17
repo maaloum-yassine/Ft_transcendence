@@ -4,14 +4,21 @@
 {
 	text-align: center;
 } */
-#contact-image {
-	display: block; /* Makes the image a block element */
-	margin-left: auto; /* Pushes the image to the right */
-	margin-right: auto; /* Balances the left margin to center */
-  }
+/* #contact-image {
+	display: block; 
+	margin-left: auto;
+	margin-right: auto;
+  } */
 .friend_name{
 	text-align: center;
 	color: #fff;
+}
+#contact-image{
+	display: block;
+  margin: 0 auto;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
 }  
 #chat-window {
   height: 400px;
@@ -74,14 +81,12 @@ body {
 }
 
 .container-chat {
-  width: 120%;
-  max-width: 1200px;
+  width: 1500px;
   height: 80vh;
   display: flex;
   overflow: hidden;
   background: rgba(33, 33, 33, 0.7);
-  border-radius: 10px;
-  margin-right: 350px;
+  border-radius: 15px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px);
 }
@@ -93,6 +98,7 @@ body {
 .slide {
   flex: 1;
   display: flex;
+  background-color: #1f2122;
   flex-direction: column;
   padding: 33px;
   overflow-y: auto;
@@ -116,12 +122,14 @@ h2 {
 #friends li {
   padding: 10px;
   border: 1px solid #555;
-  border-radius: 5px;
+  border-radius: 38px;
   margin-top: 10px;
   margin-bottom: 5px;
   cursor: pointer;
-  background-color: #222;
-  color: white;
+  background-color: #3E3E3E !important;
+  color: #fff;
+  font-style: normal;
+  font-size: 18px;
 }
 
 #friends li:hover {
@@ -129,10 +137,11 @@ h2 {
 }
 
 .chat-window {
-  flex: 1;
-  border-bottom: 1px solid #444;
-  padding: 10px;
-  overflow-y: auto;
+	flex: 1;
+	border-bottom: 1px solid #4d4d4d;
+	padding: 10px !important;
+	overflow-y: auto !important;
+
 }
 
 .chat-window .message {
@@ -205,14 +214,14 @@ h2 {
 
 .searchTerm {
   width: 100%;
-  border: 3px solid orange;
+  border: 3px solid orange!important;
   border-right: none;
   padding: 15px;
   height: 20px;
   border-radius: 12px 12px 12px 12px;
   outline: none;
-  color: #fff;
-  background-color: #111;
+  color: #ffa500;
+  background-color: #fff;
 }
 
 .searchButton {
@@ -344,3 +353,76 @@ h2 {
     margin-top: 20px;
   }
 }
+/* chat button */
+
+.chat-button {
+	position: relative;
+	width: 245px;
+	padding: 7px 12px;
+	margin: 10px auto;
+	border-radius: 13px;
+	border: none;
+	color: #fff;
+	cursor: pointer;
+	background-color: #f5a31e;
+	transition: all 0.2s ease;
+
+  }
+  
+  .chat-button :active {
+	transform: scale(0.96);
+  }
+  
+  .chat-button :before,
+  .chat-button :after {
+	position: absolute;
+	content: "";
+	width: 150%;
+	left: 50%;
+	height: 100%;
+	transform: translateX(-50%);
+	z-index: -1000;
+	background-repeat: no-repeat;
+  }
+  
+  .chat-button :hover:before {
+	top: -70%;
+	background-image: radial-gradient(circle, #f5a31e 20%, transparent 20%),
+	  radial-gradient(circle, transparent 20%, #f5a31e 20%, transparent 30%),
+	  radial-gradient(circle, #f5a31e 20%, transparent 20%),
+	  radial-gradient(circle, #f5a31e 20%, transparent 20%),
+	  radial-gradient(circle, transparent 10%, #f5a31e 15%, transparent 20%),
+	  radial-gradient(circle, #f5a31e 20%, transparent 20%),
+	  radial-gradient(circle, #f5a31e 20%, transparent 20%),
+	  radial-gradient(circle, #f5a31e 20%, transparent 20%),
+	  radial-gradient(circle, #f5a31e 20%, transparent 20%);
+	background-size: 10% 10%, 20% 20%, 15% 15%, 20% 20%, 18% 18%, 10% 10%, 15% 15%,
+	  10% 10%, 18% 18%;
+	background-position: 50% 120%;
+	animation: greentopBubbles 0.6s ease;
+  }
+
+  .chat-button:hover::after {
+	bottom: -70%;
+	background-image: radial-gradient(circle, #f5a31e 20%, transparent 20%),
+	  radial-gradient(circle, #f5a31e 20%, transparent 20%),
+	  radial-gradient(circle, transparent 10%, #f5a31e 15%, transparent 20%),
+	  radial-gradient(circle, #f5a31e 20%, transparent 20%),
+	  radial-gradient(circle, #f5a31e 20%, transparent 20%),
+	  radial-gradient(circle, #f5a31e 20%, transparent 20%),
+	  radial-gradient(circle, #f5a31e 20%, transparent 20%);
+	background-size: 15% 15%, 20% 20%, 18% 18%, 20% 20%, 15% 15%, 20% 20%, 18% 18%;
+	background-position: 50% 0%;
+	animation: greenbottomBubbles 0.6s ease;
+  }
+
+ a:hover{
+	color: rgb(164, 163, 163);
+  }
+
+  /* friend-list */
+
+  #friend-list{
+	/* background-color: #fff; */
+	/* opacity: 50%; */
+  }

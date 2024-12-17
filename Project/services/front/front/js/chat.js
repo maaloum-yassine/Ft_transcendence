@@ -75,13 +75,13 @@ const ChatManager = (() => {
       <nav class="user-panel" aria-label="User actions">
       <a href="/friend_profile?id=${
         friend.id
-      }" class="panel-option" aria-label="View profile">
+      }" class="chat-button" aria-label="View profile">
       View profile
       </a>
-      <a href="#" class="panel-option" aria-label="Invite to a game">
+      <a href="#" class="chat-button" aria-label="Invite to a game">
       Invite to a game
       </a>
-      <a href="#" id="block" class="panel-option" aria-label="Block">
+      <a href="#" id="block" class="chat-button" aria-label="Block">
       Block
       </a>
       </nav>
@@ -492,13 +492,13 @@ const ChatManager = (() => {
 
     const viewProfileLink = document.createElement("a");
     viewProfileLink.href = `/friend_profile?id=${friend.id}`;
-    viewProfileLink.className = "panel-option";
+    viewProfileLink.className = "chat-button";
     viewProfileLink.setAttribute("aria-label", "View profile");
     viewProfileLink.textContent = "View profile";
 
     const inviteToGameLink = document.createElement("a");
     inviteToGameLink.href = "#";
-    inviteToGameLink.className = "panel-option";
+    inviteToGameLink.className = "chat-button";
     inviteToGameLink.setAttribute("aria-label", "Invite to a game");
     inviteToGameLink.textContent = "Invite to a game";
     inviteToGameLink.onclick = () => {
@@ -510,7 +510,7 @@ const ChatManager = (() => {
     const blockLink = document.createElement("a");
     blockLink.href = "#";
     blockLink.id = "block";
-    blockLink.className = "panel-option";
+    blockLink.className = "chat-button";
     blockLink.setAttribute("aria-label", "Block");
     blockLink.textContent = "Block";
     blockLink.onclick = async (e) => {
@@ -646,7 +646,7 @@ const ChatManager = (() => {
         const img = document.getElementById("contact-image");
         img.src = "";
         img.alt = "";
-        const panelOptions = document.querySelectorAll("a.panel-option");
+        const panelOptions = document.querySelectorAll("a.chat-button");
         panelOptions.forEach((option) => {
           option.remove();
         });
@@ -671,7 +671,7 @@ const ChatManager = (() => {
           const img = document.getElementById("contact-image");
           img.src = "";
           img.alt = "";
-          const panelOptions = document.querySelectorAll("a.panel-option"); // Select all <a> with class "panel-option"
+          const panelOptions = document.querySelectorAll("a.chat-button"); // Select all <a> with class "chat-button"
           panelOptions.forEach((option) => {
             option.remove();
           });
