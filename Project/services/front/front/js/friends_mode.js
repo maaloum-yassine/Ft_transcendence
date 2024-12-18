@@ -111,8 +111,8 @@ export function initFriendsModeGame() {
   }
 
   function gameLoop(timestamp) {
-    drawGame();
     check_winner();
+    drawGame();
     requestAnimationFrame(gameLoop);
   }
 

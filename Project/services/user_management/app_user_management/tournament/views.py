@@ -13,6 +13,7 @@ from a_game.models import GameModel
 
 import shortuuid
 
+from datetime import datetime
 
 @login_required
 def TournamentV(request, tournament_name):
@@ -40,26 +41,29 @@ def TournamentV(request, tournament_name):
         }
 
         if is_tournament_full:
+            print("Tournament is full")
             player1, player2, player3, player4 = tournament_members.all()
-            
+
             existing_match1 = TournamentMatch.objects.filter(
                 tournament=tournament, 
                 player1=player1, 
-                player2=player2,
+                player2=player2
             ).first()
 
             existing_match2 = TournamentMatch.objects.filter(
                 tournament=tournament, 
                 player1=player3, 
-                player2=player4,
+                player2=player4
             ).first()
 
             if not existing_match1 or not existing_match2:
+                # Create game rooms and matches
                 game1_room = GameModel.objects.create(
                     gameroom_name=f"Tournament-{tournament.tournament_name}-{shortuuid.uuid()}",
-                    room_name=shortuuid.uuid()
+                    room_name=shortuuid.uuid(),
+                    created_at=datetime.now()
                 )
-
+                print("Game 1 room created")
                 match1 = TournamentMatch.objects.create(
                     tournament=tournament,
                     player1=player1,
@@ -69,7 +73,8 @@ def TournamentV(request, tournament_name):
 
                 game2_room = GameModel.objects.create(
                     gameroom_name=f"Tournament-{tournament.tournament_name}-{shortuuid.uuid()}",
-                    room_name=shortuuid.uuid()
+                    room_name=shortuuid.uuid(),
+                    created_at=datetime.now()
                 )
                 match2 = TournamentMatch.objects.create(
                     tournament=tournament,
@@ -78,10 +83,24 @@ def TournamentV(request, tournament_name):
                     game2_room=game2_room,
                 )
 
+                print("Game 2 room created")
+                final_room = GameModel.objects.create(
+                    gameroom_name=f"Tournament-{tournament.tournament_name}-{shortuuid.uuid()}",
+                    room_name=shortuuid.uuid(),
+                    created_at=datetime.now()
+                )
+                final_match = TournamentMatch.objects.create(
+                    tournament=tournament,
+                    player1=player3,
+                    player2=player4,
+                    final_room=final_room,
+                )
+
                 tournament.game1_name = game1_room.room_name
                 tournament.game2_name = game2_room.room_name
+                tournament.final_name = final_room.room_name
                 tournament.save()
-
+                print("Tournament updated")
                 context.update({
                     'game1_room': game1_room.room_name,
                     'game2_room': game2_room.room_name,
@@ -96,6 +115,7 @@ def TournamentV(request, tournament_name):
         }, status=404)
 
 
+
 @login_required
 @api_view(['POST'])
 def create_or_join(request: Request):
@@ -103,7 +123,6 @@ def create_or_join(request: Request):
     if request.method == 'POST':
         if request.data.get("createtournamentName"):
             tournamentName = request.data.get("createtournamentName")
-            print(f"this is the tournament name >>>>>>>>>>>>>   {tournamentName}")
             if TournamentModels.objects.filter(tournamentgame_name=tournamentName).exists():
                 return JsonResponse({"state": False, "message": "This tournament name already exists."})
             
@@ -119,7 +138,6 @@ def create_or_join(request: Request):
 
         elif request.data.get("jointournamentName"):
             tournamentName = request.data.get("jointournamentName")
-            print(f"this is the tournament name >>>>>>>>>>>>>   {tournamentName}")
             if TournamentModels.objects.filter(tournamentgame_name=tournamentName).exists():
                 if TournamentModels.objects.get(tournamentgame_name=tournamentName).tournament_members.count() < 4:
                     if request.user not in TournamentModels.objects.get(tournamentgame_name=tournamentName).tournament_members.all():

@@ -14,7 +14,6 @@ class GameConsumer(AsyncWebsocketConsumer):
         self.room_name = self.scope['url_route']['kwargs']['group_name']
         self.room_group_name = f'{self.room_name}'
         self.paddle = None
-
         
         if self.room_name not in GameConsumer.games:
             GameConsumer.games[self.room_name] = {
@@ -59,13 +58,10 @@ class GameConsumer(AsyncWebsocketConsumer):
             game_state['Player2name'] = self.scope['user'].username
             game_state['start_game'] = True
             
-            
             self.reset_ball(game_state)
 
-            
             await self.start_game_loop()
 
-            
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
@@ -149,7 +145,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def start_game_loop(self):
         game_state = GameConsumer.games[self.room_name]
-        
         
         if not game_state['game_task']:
             game_state['game_task'] = asyncio.create_task(self.game_loop())
@@ -238,7 +233,6 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         game_state = GameConsumer.games[self.room_name]
-
         
         if text_data_json.get('type') == 'screen_dimensions':
             game_state['canvas_width'] = text_data_json.get('width', 1000)

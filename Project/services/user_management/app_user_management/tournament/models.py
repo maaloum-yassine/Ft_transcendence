@@ -15,6 +15,7 @@ class TournamentModels(models.Model):
     admin = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
     game1_name = models.CharField(max_length=128, null=True, blank=True, default="game1")
     game2_name = models.CharField(max_length=128, null=True, blank=True, default="game2")
+    final_name = models.CharField(max_length=128, null=True, blank=True, default="final")
     
     def __str__(self):
         return self.tournamentgame_name
@@ -25,6 +26,7 @@ class TournamentMatch(models.Model):
     player2 = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='tournament_matches_as_player2')
     game1_room = models.OneToOneField(GameModel, on_delete=models.SET_NULL, null=True, blank=True, related_name='game1_tournamentmatch')
     game2_room = models.OneToOneField(GameModel, on_delete=models.SET_NULL, null=True, blank=True, related_name='game2_tournamentmatch')
+    final_room = models.OneToOneField(GameModel, on_delete=models.SET_NULL, null=True, blank=True, related_name='final_tournamentmatch')
     round_number = models.IntegerField(default=1)
     is_completed = models.BooleanField(default=False)
     winner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='tournament_wins')

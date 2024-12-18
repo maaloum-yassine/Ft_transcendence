@@ -35,7 +35,7 @@ function createGameRoom(roomName) {
         return res.json();
     })
     .then(res => {
-        alert(res.message);
+        // alert(res.message);
         if (res.message === "Game room Joined successfully" || res.message === "Game room created successfully") {
             history.pushState({ roomName: res.room_name }, "", "/friends_mode");
             urlLocationHandler();

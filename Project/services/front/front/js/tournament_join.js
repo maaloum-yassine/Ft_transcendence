@@ -1,4 +1,4 @@
-
+import { urlLocationHandler } from "./url-router.js";
 
 let ws = null;
 let isPlayerReady = false;
@@ -49,10 +49,29 @@ function updatePlayerList(players) {
 function updateTournamentStatus(tournamentData) {
     const statusElement = document.getElementById('trn-status-display');
     const launchButton = document.getElementById('trn-match-launch');
+    const exitButton = document.getElementById('trn-exit-arena');
+
+    if (exitButton) {
+        exitButton.addEventListener('click', () => {
+            history.pushState(null, "", "/tournament");
+            urlLocationHandler();
+        });
+    }
 
     if (tournamentData.is_tournament_full) {
         statusElement.textContent = 'Arena is Full. Battle Begins Soon!';
         launchButton.disabled = false;
+
+        launchButton.addEventListener('click', function() {
+            if (!isPlayerReady) {
+                isPlayerReady = true;
+                this.disabled = true;
+                this.querySelector('.trn-button-text').textContent = 'Preparing Battlefield...';
+                if (ws) {
+                    ws.send(JSON.stringify({ action: 'player_ready' }));
+                }
+            }
+        });
     } else {
         const remainingSpots = 4 - tournamentData.tournament_members.length;
         statusElement.textContent = `Gathering Warriors: ${remainingSpots} Spot${remainingSpots !== 1 ? 's' : ''} Left`;
@@ -64,7 +83,7 @@ function updateTournamentStatus(tournamentData) {
 export function connectWebSocket() {
     const state = history.state;
     const tournamentName = state ? state.roomName : null;
-    alert("This is the tournament name: " + tournamentName);
+    // alert("This is the tournament name: " + tournamentName);
     ws = new WebSocket(`wss://${window.location.host}/ws/game/tournament/${tournamentName}/`);
 
     ws.onopen = function(event) {
@@ -83,9 +102,10 @@ export function connectWebSocket() {
         if (message.type === 'player_ready_update') {
             updateReadyStatus(message.ready_players);
         }
-        
-        if (message.type === 'redirect_to_game') {   
-            window.location.href = `/game/${message.game_room}/`;
+        if (message.type == '')
+        if (message.type === 'redirect_to_game') {
+            history.pushState({ roomName: message.game_room }, "", "/friends_mode");
+            urlLocationHandler();
         }
     };
 

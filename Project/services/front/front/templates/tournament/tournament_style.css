@@ -1,15 +1,15 @@
-/* :root {
-  --color-background: #0a0b1a; /* Deep black for background */
-  --color-surface: #111111; /* Slightly lighter black for surfaces */
-  --color-primary: #ff6600; /* Orange for primary elements */
-  --color-secondary: #ff4500; /* A darker orange for secondary elements */
-  --color-accent-create: #ff6600; /* Orange accent for Create button */
-  --color-accent-join: #ff4500; /* Darker orange for Join button */
-  --color-text-primary: #ffffff; /* White for primary text */
-  --color-text-secondary: #a0a7c4; /* Light grey for secondary text */
+:root {
+  --color-background: #0a0b1a;
+  --color-surface: #111111;
+  --color-primary: #ff6600;
+  --color-secondary: #ff4500;
+  --color-accent-create: #ff6600; 
+  --color-accent-join: #ff4500; 
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a0a7c4;
   --border-radius: 20px;
   --transition-speed: 0.4s;
-} */
+}
 
 * {
   margin: 0;
@@ -168,7 +168,7 @@ body {
     135deg,
     rgba(255, 102, 0, 0.1),
     rgba(255, 69, 0, 0.1)
-  ); /* Orange background */
+  );
   opacity: 0;
   transition: opacity var(--transition-speed);
 }
@@ -217,10 +217,10 @@ body {
   position: relative;
 }
 
-input[type="text"] {
+#createtournamentinputid {
   width: 100%;
-  /* padding: 1rem 1.5rem; */
-  /* background-color: rgba(0, 0, 0, 0.3); */
+  padding: 1rem 1.5rem;
+  background-color: rgba(0, 0, 0, 0.3);
   border: 2px solid transparent;
   border-radius: 12px;
   color: var(--color-text-primary);
@@ -228,10 +228,27 @@ input[type="text"] {
   transition: all var(--transition-speed);
 }
 
-input[type="text"]:focus {
+#createtournamentinputid:focus {
   outline: none;
   border-color: var(--color-primary);
 }
+
+#jointournamentinputid {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  transition: all var(--transition-speed);
+}
+
+#jointournamentinputid:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
 
 .action-button {
   padding: 1rem 2rem;

@@ -3,13 +3,19 @@ import { urlLocationHandler } from "./url-router.js";
 export const CTRN_ = () => {
     const createTournamentForm = document.getElementById("createtournamentform");
     const joinTournamentForm = document.getElementById("jointournamentform");
+    const exitButton = document.getElementById('trn-exit');
 
+    if (exitButton) {
+        exitButton.addEventListener('click', () => {
+            history.pushState(null, "", "/home");
+            urlLocationHandler();
+        });
+    }
     createTournamentForm.addEventListener("submit", (event) => {
         event.preventDefault();
         const createtournamentName = document.getElementById('createtournamentinputid').value;
 
         if (createtournamentName.trim() !== '') {
-            alert("This is the create tournament name: " + createtournamentName);
             createTournamentRoom(createtournamentName);
         } else {
             alert('Please enter a tournament name To Create it.');
@@ -21,7 +27,6 @@ export const CTRN_ = () => {
         const jointournamentName = document.getElementById('jointournamentinputid').value;
 
         if (jointournamentName.trim() !== '') {
-            alert("This is the join tournament name: " + jointournamentName);
             joinTournamentRoom(jointournamentName);
         } else {
             alert('Please enter a tournament name To Join it.');
@@ -40,11 +45,7 @@ function createTournamentRoom(createtournamentName) {
     })
     .then(res => res.json())
     .then(res => {
-        alert("aloooooo")
-        alert(res.message);
         if (res.message === "Tournament created successfully!") {
-            alert("You created successfully!");
-            alert("This is the room name: " + res.room_name);
             history.pushState({ roomName: res.room_name }, "", "/tournament_join");
         }
         urlLocationHandler();
@@ -66,9 +67,7 @@ function joinTournamentRoom(jointournamentName) {
     .then(res => res.json())
     .then(res => {
         console.log(res);
-        alert("aloooooo")
         if (res.message === "You have joined the tournament successfully!") {
-            alert("You have joined the tournament successfully!");
             history.pushState({ roomName: res.room_name }, "", "/tournament_join");
         }
         urlLocationHandler();
