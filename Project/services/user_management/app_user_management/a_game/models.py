@@ -5,6 +5,7 @@ import shortuuid
 from user_managemanet.models import CustomUser 
 
 
+
 class GameModel(models.Model):
     room_name = models.CharField(max_length=180, blank=True, unique=True, default=shortuuid.uuid)
     gameroom_name = models.CharField(max_length=128, unique=True, null=True, blank=True)
@@ -16,6 +17,7 @@ class GameModel(models.Model):
     game_ended = models.BooleanField(default=False)
     winner = models.CharField(max_length=128, null=True, blank=True)
     created_at = models.DateTimeField(max_length=400, null=True, blank=True)
+    tournament = models.ForeignKey("tournament.TournamentModels", null=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.room_name

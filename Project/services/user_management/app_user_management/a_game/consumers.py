@@ -5,7 +5,7 @@ from datetime import datetime
 import json
 import asyncio
 import random
-
+from asgiref.sync import async_to_sync
 class GameConsumer(AsyncWebsocketConsumer):
     
     games = {}
@@ -135,6 +135,22 @@ class GameConsumer(AsyncWebsocketConsumer):
 
         except GameModel.DoesNotExist:
             print(f"Game not found for room: {self.room_group_name}")
+    
+        try:
+            game = GameModel.objects.get(room_name=self.room_group_name)
+            if game.tournament is not None:
+                tounament = game.tournament.tournament_name
+                async_to_sync(self.channel_layer.group_send)(
+                    f'tournament_{self.tournament_name}',
+                    {
+                    'type': 'tournament_members_handler',
+                    'method': 'game_ended',
+                    'tournament_id': tounament.id,
+                    'winner': game_state['winner']
+                    }
+                )
+        except GameModel.DoesNotExist:
+            pass
 
     def reset_ball(self, game_state):
         
@@ -167,7 +183,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                     game_state['winner'] = game_state['Player2name']
                     await self.end_game(game_state)
 
-                
+                    
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {
@@ -181,6 +197,16 @@ class GameConsumer(AsyncWebsocketConsumer):
                         'winner': game_state['winner']
                     }
                 )
+
+                
+
+
+                # if self.scope['user'].username == game_state['winner']:
+                #     await self.channel_layer.group_send(self.room_group_name, {
+                #         'type': 'game_end',
+                #         'winner': game_state['winner'],
+                #         'redirect_url': '/profile/'
+                #     })
 
                 await asyncio.sleep(0.016)
             game_state.save()
@@ -233,6 +259,7 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         game_state = GameConsumer.games[self.room_name]
+
         
         if text_data_json.get('type') == 'screen_dimensions':
             game_state['canvas_width'] = text_data_json.get('width', 1000)

@@ -74,6 +74,37 @@ def create_friends_game(request: Request):
 
     return JsonResponse({"state": False, "message": "Invalid request method."})
 
+
+# from django.http import JsonResponse
+# from django.shortcuts import get_object_or_404
+# from .models import GameModel
+
+# def fetch_user_wins_by_id(request):
+#     try:
+#         user_id = request.GET.get('id')  # Get the user_id from query params
+
+#         # Ensure user_id is provided
+#         if not user_id:
+#             return JsonResponse({"error": "User ID is required"}, status=400)
+
+#         user = CustomUser.objects.get(id=user_id)
+
+#         number_of_wins = GameModel.objects.filter(winner=user.username).count()
+
+#         response_data = {
+#             "id": user.id,
+#             "username": user.username,
+#             "first_name": user.first_name,
+#             "last_name": user.last_name,
+#             "avatar": user.avatar,
+#             "number_of_wins": number_of_wins
+#         }
+
+#         return JsonResponse(response_data, status=200)
+
+#     except CustomUser.DoesNotExist:
+#         return JsonResponse({"error": "User not found"}, status=404)
+
 @login_required
 @api_view(['GET'])
 def list_games(request: Request):

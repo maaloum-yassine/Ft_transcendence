@@ -3,6 +3,8 @@ from channels.db import database_sync_to_async
 from .models import TournamentModels, TournamentMatch
 import json
 import logging
+from django.apps import apps
+
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +45,6 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             logger.error(f"Error receiving WebSocket message: {e}")
 
-
     async def handle_player_ready(self):
         tournament = await self.get_tournament()
         self.ready_players.append(self.user.username)
@@ -74,12 +75,14 @@ class TournamentConsumer(AsyncWebsocketConsumer):
     async def redirect_to_game(self, event):
         pass
 
+
     async def player_ready_update(self, event):
         await self.send(text_data=json.dumps({
             'type': 'player_ready_update',
             'ready_players': event['ready_players'],
             'tournament_members': event['tournament_members']
         }))
+
 
     async def update_members_list(self):
         try:
@@ -130,6 +133,17 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             logger.warning(f"Tournament not found when removing user: {self.tournament_name}")
 
     async def tournament_members_handler(self, event):
+        # if 'method' in event and event['method'] == 'game_ended':
+        #     print("method is Correct")
+        #     # if self.scope['user'].username == event['winner']:
+
+        #     #     last_game = GameModel.objects.filter(tournament_id=event['tounament_id']).order_by('id').last()
+        #     #     await self.send(text_data=json.dumps({
+        #     #         'type': 'redirect_to_game',
+        #     #         'game_room': last_game.room_name
+        #     #     }))
+
+        # else:
         await self.send(text_data=json.dumps({
             'type': 'tournament_members_handler',
             'tournament_members': event['tournament_members']

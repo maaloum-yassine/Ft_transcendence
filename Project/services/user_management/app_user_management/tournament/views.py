@@ -61,9 +61,9 @@ def TournamentV(request, tournament_name):
                 game1_room = GameModel.objects.create(
                     gameroom_name=f"Tournament-{tournament.tournament_name}-{shortuuid.uuid()}",
                     room_name=shortuuid.uuid(),
+                    tournament=tournament,
                     created_at=datetime.now()
                 )
-                print("Game 1 room created")
                 match1 = TournamentMatch.objects.create(
                     tournament=tournament,
                     player1=player1,
@@ -74,6 +74,7 @@ def TournamentV(request, tournament_name):
                 game2_room = GameModel.objects.create(
                     gameroom_name=f"Tournament-{tournament.tournament_name}-{shortuuid.uuid()}",
                     room_name=shortuuid.uuid(),
+                    tournament=tournament,
                     created_at=datetime.now()
                 )
                 match2 = TournamentMatch.objects.create(
@@ -83,10 +84,10 @@ def TournamentV(request, tournament_name):
                     game2_room=game2_room,
                 )
 
-                print("Game 2 room created")
                 final_room = GameModel.objects.create(
                     gameroom_name=f"Tournament-{tournament.tournament_name}-{shortuuid.uuid()}",
                     room_name=shortuuid.uuid(),
+                    tournament=tournament,
                     created_at=datetime.now()
                 )
                 final_match = TournamentMatch.objects.create(

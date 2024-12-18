@@ -83,7 +83,6 @@ function updateTournamentStatus(tournamentData) {
 export function connectWebSocket() {
     const state = history.state;
     const tournamentName = state ? state.roomName : null;
-    // alert("This is the tournament name: " + tournamentName);
     ws = new WebSocket(`wss://${window.location.host}/ws/game/tournament/${tournamentName}/`);
 
     ws.onopen = function(event) {
@@ -102,7 +101,7 @@ export function connectWebSocket() {
         if (message.type === 'player_ready_update') {
             updateReadyStatus(message.ready_players);
         }
-        if (message.type == '')
+
         if (message.type === 'redirect_to_game') {
             history.pushState({ roomName: message.game_room }, "", "/friends_mode");
             urlLocationHandler();
