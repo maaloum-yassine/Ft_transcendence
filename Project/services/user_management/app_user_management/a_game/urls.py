@@ -5,6 +5,8 @@ urlpatterns = [
     # path('', test, name='test'),
     # path('creategame_form/', creategame_form, name='creategame_form'),
     path('create_friends_game/', create_friends_game, name='create_friends_game'),
+    path('list_games/', list_games, name='list_games'),
+    path('game_stats/', game_stats, name='game_stats'),
     path('tournament/', include('tournament.urls')),
     path('<str:room_name>/', game_view, name='game'),
 ]

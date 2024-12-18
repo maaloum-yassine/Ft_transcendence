@@ -9,8 +9,6 @@ RUN		apt-get install curl -y
 
 RUN     mkdir -p /var/www/html/media/avatars
 
-COPY    ./front /var/www/html
-
 COPY    ./front/default_avatar.png /var/www/html/media/avatars
 
 COPY	./tools/nginx_configure.sh /tmp/

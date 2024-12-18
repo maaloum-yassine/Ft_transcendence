@@ -3,7 +3,6 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.auth import AuthMiddlewareStack
 
 class TicTacToeConsumer(AsyncWebsocketConsumer):
-    # Class-level dictionary to track room states
     room_states = {}
 
     async def connect(self):
@@ -67,10 +66,10 @@ class TicTacToeConsumer(AsyncWebsocketConsumer):
 
         for combo in winning_combinations:
             if board[combo[0]] == board[combo[1]] == board[combo[2]] and board[combo[0]] is not None:
-                return board[combo[0]]  # Return the winner ('X' or 'O')
+                return board[combo[0]]
 
         if all(cell is not None for cell in board):
-            return "draw"  # If all cells are filled and no winner
+            return "draw"
 
         return None
 
@@ -146,13 +145,6 @@ class TicTacToeConsumer(AsyncWebsocketConsumer):
             "board_state": event["board_state"],
             "current_turn": event["current_turn"]
         }))
-    # async def game_end(self, event):
-    #     winner = event["winner"]
-    #     await self.send(text_data=json.dumps({
-    #         "type": "game_end",
-    #         "winner": winner,
-    #         "message": f"Game Over! {winner} wins!" if winner != "draw" else "Game Over! It's a draw."
-    #     }))
     async def final_update(self, event):
         winner = event["winner"]
         loser = event["loser"]
@@ -179,7 +171,6 @@ class TicTacToeConsumer(AsyncWebsocketConsumer):
         room_state = self.room_states[self.room_name]
         final_board = room_state['board']
 
-        # Send the final game state to the client
         await self.send(text_data=json.dumps({
             "type": "game_end",
             "winner": winner,

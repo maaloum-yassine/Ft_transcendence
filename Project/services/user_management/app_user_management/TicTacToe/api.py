@@ -18,12 +18,15 @@ def test_endpoint(request):
 def list_games(request, id_user: int):
     user = get_object_or_404(CustomUser, id=id_user)
     
-    games = TicTacToeGame.objects.filter(player_x=user) | TicTacToeGame.objects.filter(player_o=user)
+    games = (
+        TicTacToeGame.objects.filter(player_x=user, winner__isnull=False) |
+        TicTacToeGame.objects.filter(player_o=user, winner__isnull=False)
+    )
     serialized_games = [
         {
             "id": game.id,
-            "player_x": game.player_x.username if game.player_x else None,  # Get username instead of ID
-            "player_o": game.player_o.username if game.player_o else None,  # Get username instead of ID
+            "player_x": game.player_x.username if game.player_x else None,
+            "player_o": game.player_o.username if game.player_o else None,
             "board_state": game.board_state,
             "winner": game.winner,
             "status": determine_game_status(game, user),
@@ -37,7 +40,10 @@ def list_games(request, id_user: int):
 def user_stats(request, id_user: int):
     user = get_object_or_404(CustomUser, id=id_user)
     
-    games = TicTacToeGame.objects.filter(player_x=user) | TicTacToeGame.objects.filter(player_o=user)
+    games = (
+        TicTacToeGame.objects.filter(player_x=user, winner__isnull=False) |
+        TicTacToeGame.objects.filter(player_o=user, winner__isnull=False)
+    )
 
     total_games = games.count()
     wins = 0
@@ -49,15 +55,14 @@ def user_stats(request, id_user: int):
             wins += 1
         elif game.winner == 'O' and game.player_o == user:
             wins += 1
-        elif game.winner == 'D':  # Draw condition
+        elif game.winner == 'D':
             draws += 1
-        elif game.winner != 'D':  # Losses
+        elif game.winner != 'D':
             if game.player_x == user:
                 losses += 1
             elif game.player_o == user:
                 losses += 1
 
-    # Return the stats
     return {
         "total_games": total_games,
         "wins": wins,
@@ -109,31 +114,7 @@ def get_game(request, game_id: int):
     response_data = TicTacToeGameSchema.from_orm(game)
     return response_data
 
-# @api.post("/games/{game_id}/join", response=dict)
-# def join_game(request, game_id: int, game_data: TicTacToeJoinGame):
-#     """
-#     Allows a second player to join an existing game.
-#     """
-#     user_id = game_data.player_o  # Assuming JWT middleware sets this
-#     game = get_object_or_404(TicTacToeGame, id=game_id)
-#     if game.player_x.id == user_id:
-#         return {"error": "You are already Player X in this game."}
-#     if(game.player_o):
-#         print(game.player_o.id)
-#     print("=================================================")
-#     print(user_id)
 
-#     if game.player_o:
-#         if game.player_o.id == user_id:
-#             return {"error": "You are already Player O in this game."}
-#         return {"error": "This game already has two players."}
-
-#     player_o = get_object_or_404(CustomUser, id=user_id)
-#     game.player_o = player_o
-#     game.save()
-#     print("message", f"{player_o.username} joined the game as Player O", "game_id", game.id)
-
-#     return {"message": f"{player_o.username} joined the game as Player O", "game_id": game.id}
 @api.post("/games/{game_id}/join", response=dict)
 def join_game(request, game_id: int, game_data: TicTacToeJoinGame):
     """
@@ -151,25 +132,23 @@ def join_game(request, game_id: int, game_data: TicTacToeJoinGame):
         return JsonResponse({
             "error": "You are already Player X in this game.",
             "details": f"User {user_id} is already Player X"
-        }, status=200)
+        }, status=400)
 
     if game.player_o:
         if game.player_o.id == user_id:
            return JsonResponse({
-            "error": "You are already Player X in this game.",
+            "error": "You are already Player O in this game.",
             "details": f"User {user_id} is already Player O"
-        }, status=200)
+        }, status=400)
         
-        print("Debug: Game already has two players")
-        return {
+        return JsonResponse({
             "error": "This game already has two players.",
             "details": f"Game {game_id} is full"
-        }
+        }, status=400)
 
     game.player_o = user
     game.save()
 
-    print(f"Debug: User {user_id} ({user.username}) successfully joined as Player O")
     return {
         "message": f"{user.username} joined the game as Player O", 
         "game_id": game.id
@@ -205,8 +184,6 @@ def update_game(request, game_id: int, game_data: TicTacToeGameCreateSchema):
         return TicTacToeGameSchema.from_orm(game)
 
     except Exception as e:
-        # Log the full error for debugging
-        print(f"Error updating game: {str(e)}")
         raise HttpError(422, f"Failed to update game state: {str(e)}")
 
 def check_win(board_state: str, player: str) -> bool:

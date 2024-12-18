@@ -1,15 +1,15 @@
 FROM python:3.9
 
-WORKDIR  /app
+WORKDIR /app
 
-RUN     apt-get update && apt-get install -y postgresql-client
+RUN apt-get update && apt-get install -y postgresql-client
 
-COPY    ./app_user_management /app/
+COPY ./app_user_management/requirement_new.txt /app/
 
-RUN      python -m pip install --upgrade pip 
+RUN    python -m pip install --upgrade pip 
 
-RUN     pip install -r requirement_new.txt 
+RUN    pip install -r requirement_new.txt 
 
-EXPOSE  8000
+EXPOSE 8000
 
 ENTRYPOINT ["/app/entrypoint.sh"]

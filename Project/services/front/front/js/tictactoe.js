@@ -15,6 +15,7 @@ function run() {
   let start_game = false;
   let player_o = null;
   let player_x = null;
+  let statsChart = null;
 
   function createCell(index) {
     const cell = document.createElement("div");
@@ -45,7 +46,7 @@ function run() {
 
   async function fetchUserStats() {
     const authResponse = await fetch(
-      `https://${window.location.host}/api/badr/`,
+      `https://${window.location.host}/api/getId/`,
       {
         method: "GET",
         headers: {
@@ -64,7 +65,6 @@ function run() {
     console.log("User ID:", userId);
 
     try {
-      // Fetch user stats
       const statsResponse = await fetch(
         `${apiBaseUrl}/user_stats?id_user=${userId}`,
         {
@@ -76,11 +76,9 @@ function run() {
         }
       );
 
-      // Log the raw response
       const statsData = await statsResponse.json();
       console.log("User stats:", statsData);
 
-      // Display stats using Chart.js
       displayStatsChart(statsData);
     } catch (error) {
       console.error("Error fetching user stats:", error);
@@ -90,8 +88,11 @@ function run() {
 
   function displayStatsChart(stats) {
     const ctx = document.getElementById("statsChart").getContext("2d");
-
-    new Chart(ctx, {
+    
+    if (statsChart) {
+      statsChart.destroy();
+    }
+    statsChart = new Chart(ctx, {
       type: "pie",
       data: {
         labels: ["Wins", "Losses", "Draws"],
@@ -138,8 +139,6 @@ function run() {
 
   function handleCellClick(event) {
     const index = event.target.dataset.index;
-    // console.log(isMyTurn, currentGameId)
-
     if (
       isMyTurn &&
       event.target.textContent === "" &&
@@ -212,7 +211,7 @@ function run() {
 
     try {
       const authResponse = await fetch(
-        `https://${window.location.host}/api/badr/`,
+        `https://${window.location.host}/api/getId/`,
         {
           method: "GET",
           headers: {
@@ -274,7 +273,7 @@ function run() {
   async function fetchGames() {
     try {
       const authResponse = await fetch(
-        `https://${window.location.host}/api/badr/`,
+        `https://${window.location.host}/api/getId/`,
         {
           method: "GET",
           headers: {
@@ -292,7 +291,24 @@ function run() {
 
       const authData = await authResponse.json();
       const userId = authData.user_id;
-      console.log("Authenticated User ID:", userId);
+      const userData = await fetch(
+        `https://${window.location.host}/api/getUsername/`,
+        {
+          method: "GET",
+          headers: {
+          "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+      
+      if (!userData.ok) {
+        throw new Error(
+          `Authentication failed! Status: ${userData.status}`
+        );
+      }
+      const Data = await userData.json();
+      const username = Data.user;
 
       const gamesResponse = await fetch(
         `${apiBaseUrl}/stats?id_user=${userId}`,
@@ -328,10 +344,11 @@ function run() {
         const isDraw = winner === "D";
 
         let resultMessage = "Still in progress";
+        console.log("winner",winner, "plyer o", playerO, "plyer x", playerX, "user id",username);
         if (isDraw) {
           resultMessage = "Draw";
         } else if (winner) {
-          if (winner === userId) {
+          if ((winner === "X" && playerX === username) || winner === "O" && playerO === username ) {
             resultMessage = "You won!";
           } else {
             resultMessage = "You lost.";
@@ -359,7 +376,7 @@ function run() {
 
     try {
       const authResponse = await fetch(
-        `https://${window.location.host}/api/badr/`,
+        `https://${window.location.host}/api/getId/`,
         {
           method: "GET",
           headers: {
@@ -399,15 +416,13 @@ function run() {
           statusElement.textContent =
             "Failed to join the game. Please try again.";
         }
-        return; // Stop further execution if there was an error
+        return;
       }
 
-      // Success message and WebSocket connection
       statusElement.textContent = data.message;
 
-      // Now that the player has joined, set the current game ID and connect to WebSocket
       currentGameId = roomId;
-      connectToWebSocket(currentGameId); // This only runs if the player successfully joins
+      connectToWebSocket(currentGameId);
     } catch (error) {
       console.error("Error joining game:", error);
       statusElement.textContent = "An error occurred. Please try again.";
@@ -420,7 +435,9 @@ function run() {
     cells.forEach((cell) => cell.classList.add("disabled")); // Disable all cells
 
     let gameStatus, winnerSymbol;
-    if (winner) {
+
+    console.log("-****************************",winnerSymbol);
+    if (winner == "X" || winner == 'O') {
       statusElement.textContent =
         winner === playerSymbol ? "You win!" : "You lose!";
       winnerSymbol =
@@ -429,19 +446,19 @@ function run() {
           : playerSymbol === "X"
           ? "O"
           : "X";
-    } else {
+    } else if (winner == "draw") {
       statusElement.textContent = "It's a draw!";
-      winnerSymbol = "D"; // Draw
+      winnerSymbol = "D";
     }
-
+ 
     isMyTurn = false;
 
     const updatePayload = {
-      id: currentGameId, // Add the game ID explicitly
+      id: currentGameId,
       player_x: player_x,
       player_o: player_o,
       board_state: getCurrentBoardState(),
-      current_turn: "X", // Use null instead of empty string
+      current_turn: "X",
       winner: winnerSymbol,
     };
     console.log(updatePayload);
@@ -534,12 +551,12 @@ function run() {
 
         case "game_end":
           console.log("Game ended. Updating board:", message.board_state);
-          renderBoard(message.board_state); // Use the correct board_state field
-          handleGameEnd(message.winner); // Call the game end handler with the winner
+          renderBoard(message.board_state);
+          handleGameEnd(message.winner); 
           break;
 
         case "error":
-          console.log("errororo");
+          console.log("error");
           break;
 
         default:

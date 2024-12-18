@@ -6,6 +6,9 @@ from .models import GameModel
 from datetime import datetime
 import shortuuid
 from rest_framework.request import Request
+from django.db.models import Q
+from django.conf import settings
+
 # @login_required
 # @api_view(['POST'])
 # def join_game(request, group_name):
@@ -82,7 +85,61 @@ def create_friends_game(request: Request):
 
     return JsonResponse({"state": False, "message": "Invalid request method."})
 
+@login_required
+@api_view(['POST'])
+def game_stats(request: Request):
+    user = request.user
+    games = GameModel.objects.filter(players=user)
 
+    wins = games.filter(winner=user.username).count()
+    losses = games.filter(~Q(winner=None) & ~Q(winner=user.username)).count()
+
+    game_data = [
+        {
+            "room_name": game.room_name,
+            "gameroom_name": game.gameroom_name,
+            "players": [player.username for player in game.players.all()],
+            "player1Score": game.player1Score,
+            "player2Score": game.player2Score,
+            "game_spend_time": game.game_spend_time,
+            "game_started": game.game_started,
+            "game_ended": game.game_ended,
+            "winner": game.winner,
+            "created_at": game.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+        }
+        for game in games
+    ]
+
+    avatar_user = request.build_absolute_uri(settings.MEDIA_URL + user.avatar).replace('http://', 'https://')
+    return JsonResponse({
+        
+        "avatar": avatar_user,
+        "user": user.username,
+        "total_games": games.count(),
+        "wins": wins,
+        "losses": losses,
+        "games": game_data,
+    })
+
+
+@login_required
+@api_view(['GET'])
+def list_games(request: Request):
+    user = request.user
+    games = GameModel.objects.filter(players=user)
+    list_games = [
+        {
+            "players": [player.username for player in game.players.all()],
+            "player1Score": game.player1Score,
+            "winner": game.winner,
+            "created_at": game.created_at,
+        }
+        for game in games
+    ]
+    return JsonResponse ({
+        "user": user.username,
+        "games": list_games
+    })
 
 
 # from django.shortcuts import render, get_object_or_404
