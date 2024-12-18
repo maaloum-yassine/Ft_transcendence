@@ -14,10 +14,12 @@ import initgame_tic from "./hndl_event_home.js";
 import ChatManager from "./chat.js";
 import { initFriendsModeGame } from "./friends_mode.js";
 import { CGR_ } from "./create_friend_game.js";
-import { CTRN_ } from "./tournament.js";
+import { initTournament } from "./tournament.js";
 import { connectWebSocket } from "./tournament_join.js";
 import fetchAndRenderProfile from "./friend_profile.js";
 import BlockedUserManager from "./deblock.js";
+
+// import 
 
 document.addEventListener("click", (e) => {
   const { target } = e;
@@ -333,7 +335,7 @@ function handlePageScripts(location, friendProfileId = null) {
   } else if (pageSelected === "create_friends_game.html") {
     CGR_();
   } else if (pageSelected === "tournament.html") {
-    CTRN_();
+    initTournament();
   } else if (pageSelected === "tournament_join.html") {
     connectWebSocket();
   } else if (pageSelected === "deblock_page.html")
